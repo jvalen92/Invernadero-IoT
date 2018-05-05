@@ -3,10 +3,12 @@
     Carriots.com
     Created 11 Jan 2013
 
-    This sketch sends streams to Carriots according to the values read by a LDR sensor
+    
+    Envia el variables desde la raspberry a la platforma Iot Carriots
 """
 
-#import RPi.GPIO as GPIO
+
+#import RPi.GPIO as GPIO por ahora no esta conectada a los sensores asi que solo manda datos aleatoreos
 from urllib2 import urlopen, Request
 from time import mktime, sleep
 from datetime import datetime
