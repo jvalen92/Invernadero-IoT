@@ -1,3 +1,4 @@
+//Temperatura LM35
 
 const int sensorPin= A0;
  
