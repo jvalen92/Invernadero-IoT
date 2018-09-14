@@ -1,13 +1,15 @@
+import json
 import requests
 
-url = "http://iot.dis.eafit.edu.co/Thingworx/Things/PruebaPlant1_sise/Properties/humedad_suelo_sise"
+url = "http://iot.dis.eafit.edu.co/Thingworx/Things/PruebaPlant1_sise/Properties/s_humedad_suelo_sise"
 
-payload = "{\n\t\"humedad_suelo_sise\":\"20\"\n}"
+payload = "{\n\t\"s_humedad_suelo_sise\":\"30\"\n}"
 headers = {
     'appKey': "d13445f2-6c11-46f9-9352-efdedf394208",
+    'Accept': "application/json",
     'Content-Type': "application/json",
     'Cache-Control': "no-cache",
-    'Postman-Token': "d63b80c3-cba9-4bd2-9680-0c40d0f03c05"
+    'Postman-Token': "3dbc9089-509b-4961-914e-f3105b4f6789"
     }
 
 response = requests.request("PUT", url, data=payload, headers=headers)

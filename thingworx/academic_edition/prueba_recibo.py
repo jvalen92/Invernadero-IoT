@@ -1,3 +1,4 @@
+import json
 import requests
 
 url = "https://academic.cloud.thingworx.com/Thingworx/Things/NorhWeatherStation_evinley/Properties/WindSpeed"
@@ -11,4 +12,6 @@ headers = {
 
 response = requests.request("GET", url, headers=headers)
 
-print(response.text)
+# print(response.text)
+cont = json.loads(response.text)
+print(cont['rows'][0]['WindSpeed'])
