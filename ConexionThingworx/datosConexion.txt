@@ -1,0 +1,46 @@
+Los siguientes datos son los que se necesitan para la conexión con los objetos actuales que se tienen en la plataforma.
+
+Server Url:
+http://iot.dis.eafit.edu.co
+
+AppKey:
+d13445f2-6c11-46f9-9352-efdedf394208
+
+Things Names:
+central_sise_v1
+planta1_sise_v1
+planta2_sise_v1
+
+
+Properties Name:
+Plant
+a_ph_sise
+s_ph_sise
+s_humedad_suelo_sise
+a_humedad_suelo_sise
+a_luz_blanca_sise
+s_luz_blanca_sise
+a_luz_uv_sise
+s_luz_uv_sise
+a_luz_infrarroja_sise
+s_luz_infrarroja_sise
+
+
+
+Central
+a_co2_sise
+s_co2_sise
+s_humedad_sise
+a_humedad_sise
+s_temperatura_sise
+a_temperatura_sise
+a_nivel_agua_sise
+s_nivel_agua_sise
+a_temperatura_tanque_sise
+s_temperatura_tanque_sise
+a_ventilador_entrada_sise
+a_ventilador_salida_sise
+
+
+Services:
+No los tenemos aun. Se usan con post.
