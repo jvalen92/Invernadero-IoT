@@ -14,7 +14,7 @@ elif sos == 'nt':
     
 # Variables
 
-tiempo = 5 # Tiempo para enviar y recibir datos
+tiempo = 10 # Tiempo para enviar y recibir datos
 
 
 # Declaracion de estructuras utiles
@@ -30,13 +30,15 @@ url = "http://iot.dis.eafit.edu.co/Thingworx/Things"
 # Valores que se obtienen
 objetos = {"central" : { }, "planta1": { }, "planta2": { }}
 
-claves = {
+
+# Variables para testeos
+claves_test = {
     "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "a_humedad_suelo_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise", "a_ph_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise"],
     "Central_sise": ["a_temperatura_tanque_sise",  "s_temperatura_tanque_sise",  "a_humedad_sise",  "a_nivel_agua_sise",  "a_ventilador_entrada_sise",  "s_co2_sise",  "s_humedad_sise",  "s_nivel_agua_sise",  "a_ventilador_salida_sise",  "a_co2_sise",  "a_temperatura_sise",  "s_temperatura_sise"]
 }
 
 # Valores que se enviaran
-valores = {
+valores_test = {
     "planta1" : {
         "s_luz_uv_sise" : "0",
         "s_luz_infrarroja_sise" : "0",
@@ -75,14 +77,73 @@ valores = {
     
 }
 
+# Valores oficiales
+
+claves_enviar = {
+    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise"],
+    "Central_sise": ["s_temperatura_tanque_sise", "s_co2_sise",  "s_humedad_sise",  "s_nivel_agua_sise",  "s_temperatura_sise"]
+}
+
+claves_recibir = {
+    "Plant_sise": ["a_humedad_suelo_sise",  "a_ph_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise"],
+    "Central_sise": ["a_temperatura_tanque_sise",  "a_humedad_sise",  "a_nivel_agua_sise",  "a_ventilador_entrada_sise","a_ventilador_salida_sise",  "a_co2_sise",  "a_temperatura_sise"]
+}
+
+# Valores que se enviaran
+valores_enviar = {
+    "planta1" : {
+        "s_luz_uv_sise" : "0",
+        "s_luz_infrarroja_sise" : "0",
+        "s_luz_blanca_sise" : "0",
+        "s_humedad_suelo_sise" : "0",
+        "s_ph_sise" : "0" },
+    "planta2" : {
+        "s_luz_uv_sise" : "0",
+        "s_luz_infrarroja_sise" : "0",
+        "s_luz_blanca_sise" : "0",
+        "s_humedad_suelo_sise" : "0",
+        "s_ph_sise" : "0" },
+    "central" : {
+        "s_temperatura_tanque_sise" : "0.0",
+        "s_co2_sise" : "0.0",
+        "s_humedad_sise" : "0.0",
+        "s_nivel_agua_sise" : "0.0",
+        "s_temperatura_sise" : "0.0" }
+}
+
+valores_recibir = {
+    "planta1" : {
+        "a_humedad_suelo_sise" : "0",
+        "a_ph_sise": "0",
+        "a_luz_infrarroja_sise" : "0",
+        "a_luz_uv_sise": "0",
+        "a_luz_blanca_sise" : "0" },
+    "planta2" : {
+        "a_humedad_suelo_sise" : "0",
+        "a_ph_sise": "0",
+        "a_luz_infrarroja_sise" : "0",
+        "a_luz_uv_sise": "0",
+        "a_luz_blanca_sise" : "0" },
+    "central" : {
+        "a_temperatura_tanque_sise" : "0.0",
+        "a_humedad_sise" : "0.0",
+        "a_nivel_agua_sise" : "0.0",
+        "a_ventilador_entrada_sise" : "False",
+        "a_ventilador_salida_sise" : "False",
+        "a_co2_sise" : "0.0",
+        "a_temperatura_sise" : "0.0" }
+}
+
+
 # Declaracion de metodos
 
+
 # Envia todos los datos a la plataforma
-def setAllServerData():
-    for valor in valores:
+def setAllServerData(valores_enviados):
+    for valor in valores_enviados:
         thingTemplate = objetos[valor]["thingTemplate"]
-        setServerData(claves[thingTemplate], valores[valor], valor)
-    return objetos
+        setServerData(claves_enviar[thingTemplate], valores_enviados[valor], valor)
+    return valores_enviados
     
 # Envia datos a un determinado objeto. Usamos claves y valores porque de esta forma podriamos enviar datos por separado y no
 # necesariamente enviar todos los datos de una vez
@@ -116,10 +177,11 @@ def printAllData():
         printer(objetos[objeto], False)
         print
 
-def getAllServerData():
-    for objeto in objetos:
-        objetos[objeto] = getServerData(objeto)
-    return objetos
+# Metodo que recibe los valores en el diccionario valores_recibidos
+def getAllServerData(valores_recibidos):
+    for valor in valores_recibidos:
+        valores_recibidos[valor] = getServerData(valor)
+    return valores_recibidos
            
 # Obtiene todas las variables y datos de un determinado objeto en thingworx y los retorna en un diccionario.
 # Devuelve una estructura que aun no conocemos muy bien, pero se debe utilizar el metodo items() para leeral
@@ -132,10 +194,22 @@ def getServerData(objeto):
     
     return result['rows'][0]
 
+
+def setProperty(objeto, key, value):
+    valores_enviar[objeto][key] = value
+
+def getProperty(objeto, key):
+    return valores_recibir[objeto][key]
+
+miObjeto = "planta1"
+
 def main():
-    getAllServerData()
-    setAllServerData()
+    getAllServerData(objetos)
+    getAllServerData(valores_recibir)
+    setProperty(miObjeto,"s_humedad_suelo_sise", "4.6")
+    setAllServerData(valores_enviar)
     printAllData()
+    print getProperty(miObjeto,"a_ph_sise")
     print("obtenido")
 anterior = 0
 while(True):
