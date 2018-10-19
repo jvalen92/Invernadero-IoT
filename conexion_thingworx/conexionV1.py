@@ -206,12 +206,18 @@ miObjeto = "planta1"
 def main():
     getAllServerData(objetos)
     getAllServerData(valores_recibir)
-    setProperty(miObjeto,"s_humedad_suelo_sise", "4.6")
+    # Cambiar una variable
+    setProperty(miObjeto,"s_humedad_suelo_sise", "5")
+    # Enviar al servidor todos los datos
     setAllServerData(valores_enviar)
     printAllData()
+    # Obtener e imprimir variables
     print getProperty(miObjeto,"a_ph_sise")
     print("obtenido")
 anterior = 0
+
+
+
 while(True):
     actual = time.time()
     if actual - anterior >= tiempo:
