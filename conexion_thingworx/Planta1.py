@@ -13,7 +13,7 @@ elif sos == 'nt':
     clear = 'cls'
     
 # Variables
-dic={"s_luz_blanca_sise":5,"s_ph_sise":6,"s_luz_infrarroja_sise":7,"s_humedad_suelo_sise":8,"s_luz_uv_sise":9}
+dic={"s_luz_blanca_sise":5,"s_ph_sise":6,"s_luz_infrarroja_sise":7,"s_humedad_suelo_sise":8,"s_luz_uv_sise":9, "s_temperatura_suelo_sise":34, "s_valvula_sise":True}
 tiempo = 5 # Tiempo para enviar y recibir datos
 dics={}
 
@@ -34,11 +34,11 @@ objetos = {"planta1":{}}
 # Valores oficiales
 
 claves_enviar = {
-    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise"],
+    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise", "s_temperatura_suelo_sise","s_valvula_sise"],
 }
 
 claves_recibir = {
-    "Plant_sise": ["a_humedad_suelo_sise",  "a_ph_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise"],
+    "Plant_sise": ["a_humedad_suelo_sise",  "a_ph_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise", "a_temperatura_suelo_sise","a_valvula_sise"],
 }
 
 # Valores que se enviaran
@@ -48,7 +48,9 @@ valores_enviar = {
         "s_luz_infrarroja_sise" : "0",
         "s_luz_blanca_sise" : "0",
         "s_humedad_suelo_sise" : "0",
-        "s_ph_sise" : "0" }
+        "s_ph_sise" : "0",
+        "s_temperatura_suelo_sise" : "0",
+        "s_valvula_sise" : "0" }
    
 }
 
@@ -58,7 +60,9 @@ valores_recibir = {
         "a_ph_sise": "0",
         "a_luz_infrarroja_sise" : "0",
         "a_luz_uv_sise": "0",
-        "a_luz_blanca_sise" : "0" }
+        "a_luz_blanca_sise" : "0",
+        "a_temperatura_suelo_sise" : "0",
+        "a_valvula_sise" : "0"}
     
 }
 
@@ -146,14 +150,10 @@ miObjeto = "planta1"
 #valores enviar s
 #valores recibir a
 def setValues():
-    for valoruni in valores_recibir["planta1"]:
-            if(valoruni[0]=='a'):
-                
-                valor=str(valoruni)
-                valors='s'+valor[1:]
-                
-
-                setProperty(valors, str(dics[valor]))   
+    for valoruni in valores_enviar["planta1"]:
+            if(valoruni[0]=='s'):
+                        
+                setProperty(valoruni, str(dic[valoruni]))   
   
 
 def main():
@@ -161,16 +161,11 @@ def main():
     getAllServerData(valores_recibir)
 
     setValues()
-    # Cambiar una variable
-    #
-    #setProperty(miObjeto,"s_ph_sise", "10")
 
     # Enviar al servidor todos los datos
     setAllServerData(valores_enviar)
     printAllData()
-    # Obtener e imprimir variables
-    #print getProperty(miObjeto,"a_ph_sise")
-    #print("obtenido")
+  
 anterior = 0
 
 
