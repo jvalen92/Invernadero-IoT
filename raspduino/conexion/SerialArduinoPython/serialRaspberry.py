@@ -19,7 +19,7 @@ def getSerial():
         datosDic = {"s_luz_blanca_sise": data[0], "s_ph_sise": data[1], "s_luz_infrarroja_sise": data[2],
                     "s_humedad_suelo_sise": data[3], "s_luz_uv_sise": data[4], "s_temperatura_suelo_sise": data[5],
                     "s_valvula_sise": data[6]}
-        print(datosDic)
+        return datosDic
     elif len(data) < 6:
         print("no se ha llenado la lista")
 
