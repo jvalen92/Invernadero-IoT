@@ -1,3 +1,19 @@
+# getArduino():
+# Recibe los datos de los sensores por serial en 1 string separado por comas
+# pone estos datos en un diccionario y retorna el diccionario con los valores
+# y con su respectivo nombre.
+#
+#
+# SendArduino():
+# Recibe un diccionario y saca los valores y los junta en un string delimitandolos
+# por ',' Luego envia este string al arduino.
+#
+# Por corregir:
+# Todavia hay un error en getArduino() y sendArduino() porque a veces el primer valor
+# que recibe o envia es vacio o no tiene todos los valores, lo que causa que a veces
+# no haga lo esperado.
+
+
 import serial
 import time
 
@@ -16,12 +32,6 @@ valores_recibir = {
 ser = serial.Serial('COM5', 9600, timeout=1)
 time.sleep(1)
 
-# Recibe los datos de los sensores por serial en 1 string separado por comas
-# pone estos datos en un diccionario y retorna el diccionario con los valores
-# y con su respectivo nombre.
-# ver que hacer que a veces cuando se resetea, no tira todos los valores, entonces
-# buscar como manejar ese error.
-
 
 def getArduino():
     print('entrando a getArduino')
@@ -33,36 +43,20 @@ def getArduino():
                     "s_humedad_suelo_sise": data[3], "s_luz_uv_sise": data[4], "s_temperatura_suelo_sise": data[5],
                     "s_valvula_sise": data[6]}
         print(datosDic)
+        # return datosDic
     else:
         data[len(data):] = '0'
 
-    # return datosDic
-
 
 def sendArduino(valores_recibir):
-    # Por el momento voy a asumir que ya tengo los valores en un diccionario, mientras resuelvo eso de como sacarlo
-    # desde Planta1.py
     aList = list(valores_recibir.values())
     aString = ','.join(map(str, aList))
-    aString = '<' + aString + '>'
-    ser.write(aString.encode())
-    print(aString)
-    print("Se acabo el proceso de enviar")
+    ser.write(aString.encode('ascii'))
 
 
-""" sendArduino(valores_recibir)
-time.sleep(5)
-
-data1 = ser.readline()
-print(data1) """
-sendArduino(valores_recibir)
-# time.sleep(5)
-while True:
+# Para pruebas
+while 1:
+    sendArduino(valores_recibir)
+    time.sleep(1)
     getArduino()
-    time.sleep(5)
-print('end')
-# para hacer pruebas
-""" while True:
-    getArduino()
-    time.sleep(2)
- """
+    print('end')
