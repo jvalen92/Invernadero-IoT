@@ -51,6 +51,7 @@ def getArduino():
 def sendArduino(valores_recibir):
     aList = list(valores_recibir.values())
     aString = ','.join(map(str, aList))
+    aString = aString + ','
     ser.write(aString.encode('ascii'))
 
 
@@ -59,4 +60,6 @@ while 1:
     sendArduino(valores_recibir)
     time.sleep(1)
     getArduino()
+   # data = ser.readline().decode('ascii')
+   # print(data)
     print('end')
