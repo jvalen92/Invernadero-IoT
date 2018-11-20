@@ -4,7 +4,7 @@
    Fecha: Septiembre 2018
    Convenciones:
    - sp = setPoitnt(valor deseado). P.e: spLuzBlanca = valor deseado de luz Blanca
-   - Se omite el uso de las preposiciones como "de", "del", "de la", en los nombres de las variables. 
+   - Se omite el uso de las preposiciones como "de", "del", "de la", en los nombres de las variables.
      P.e: luzInfrarrojaDeEntrada es en nuestro código luzInfrarrojaEntrada.
 */
 
@@ -47,7 +47,7 @@ float luzBlanca = 0,  //Luz blanca (luz visible)
       ph = 0, //Valor del ph
       humedadSuelo = 0, //Valor de humedad del suelo (moisture)
       temperaturaSuelo = 0,  //Temperatura del suelo (medida con el LM35)
-      
+
       errorIluminacion = 0, //Error de iluminacion
       errorHumedadSuelo = 0, //Error de humedad de la tierra
 
@@ -70,21 +70,21 @@ unsigned int estadoValvula = 0; //Variable para almacenar el estado de la válvu
 
 //Variables para media movil
 int lecturaLuz[NUMREADS] = {0},
-    lecturaHumedadSuelo[NUMREADS] = {0}, 
-    lecturaTemperatura[NUMREADS] = {0}, 
-    lecturaPh[NUMREADS] = {0}, 
-    lecturaInfrarroja[NUMREADS] = {0};
-    
-int indiceLuz = 0, 
-    indiceHumedadSuelo = 0, 
-    indiceTemperatura = 0, 
-    indicePh = 0, 
+                           lecturaHumedadSuelo[NUMREADS] = {0},
+                               lecturaTemperatura[NUMREADS] = {0},
+                                   lecturaPh[NUMREADS] = {0},
+                                       lecturaInfrarroja[NUMREADS] = {0};
+
+int indiceLuz = 0,
+    indiceHumedadSuelo = 0,
+    indiceTemperatura = 0,
+    indicePh = 0,
     indiceInfrarroja = 0;
 
 long totalLuz = 0,
-     totalHumedadSuelo = 0, 
-     totalTemperatura = 0, 
-     totalPH = 0, 
+     totalHumedadSuelo = 0,
+     totalTemperatura = 0,
+     totalPH = 0,
      totalIR = 0;
 
 char lectura[4] = {'\0'};  //Vector recibido desde el computador (para mejorar SISE desde RaspberryPI)
@@ -196,49 +196,51 @@ void leerSensores() { //Read sensors information and store it in variables
     clock.getTime();
     //SD Logging
     String datalog = ""; //Define datalog as string for storing data in SD as text
-    datalog += String(clock.hour, DEC);
-    datalog += ":";
-    datalog += String(clock.minute, DEC);
-    datalog += ":";
-    datalog += String(clock.second, DEC);
-    datalog += ",";
-    datalog += String(clock.dayOfMonth, DEC);
-    datalog += "/";
-    datalog += String(clock.month, DEC);
-    datalog += "/";
-    datalog += String(clock.year, DEC);
-    datalog += ",";
-    datalog += String(spLuzBlanca, 4);
-    datalog += ",";
+    //datalog += String(clock.hour, DEC);
+    //datalog += ":";
+    //datalog += String(clock.minute, DEC);
+    //datalog += ":";
+    //datalog += String(clock.second, DEC);
+    //datalog += ",";
+    //datalog += String(clock.dayOfMonth, DEC);
+    //datalog += "/";
+    //datalog += String(clock.month, DEC);
+    //datalog += "/";
+    //datalog += String(clock.year, DEC);
+    //datalog += ",";
+    //datalog += String(spLuzBlanca, 4);
+    //datalog += ",";
+    //datalog += String(luzSalida, DEC);
+    //datalog += ",";
+    //datalog += String(spHumedadSuelo, 4);
+    //datalog += ",";
     datalog += String(luzBlanca, 4);
     datalog += ",";
-    datalog += String(luzSalida, DEC);
-    datalog += ",";
-    datalog += String(spHumedadSuelo, 4);
-    datalog += ",";
-    datalog += String(humedadSuelo, 4);
-    datalog += ",";
-    datalog += String(estadoValvula, DEC);
-    datalog += ",";
-    datalog += String(temperaturaSuelo, 4);
-    datalog += ",";
-    datalog += String(luzUltravioleta, 4);
+    datalog += String(ph, 4);
     datalog += ",";
     datalog += String(luzInfrarroja, 4);
     datalog += ",";
-    datalog += String(ph, 4);
-    File dataFile = SD.open("datalog.txt", FILE_WRITE);
-    // if the file is available, write to it:
-    if (dataFile) {
-      dataFile.println(datalog);
-      dataFile.close();
-      // print to the serial port too:
-      //Serial.println("Success logging data");
-    }
-    // if the file isn't open, pop up an error:
-    else {
-      //Serial.println("error opening datalog.txt");
-    }
+    datalog += String(humedadSuelo, 4);
+    datalog += ",";
+    datalog += String(luzUltravioleta, 4);
+    datalog += ",";
+    datalog += String(temperaturaSuelo, 4);
+    datalog += ",";
+    datalog += String(estadoValvula, DEC);
+
+//
+//    File dataFile = SD.open("datalog.txt", FILE_WRITE);
+//    // if the file is available, write to it:
+//    if (dataFile) {
+//      dataFile.println(datalog);
+//      dataFile.close();
+//      // print to the serial port too:
+//      //Serial.println("Success logging data");
+//    }
+//    // if the file isn't open, pop up an error:
+//    else {
+//      //Serial.println("error opening datalog.txt");
+//    }
     tiempoInicial = millis();
   }
 }
@@ -351,6 +353,7 @@ void setup() {
 void loop() {
   tiempoActual = millis();
   leerSensores();
+  //printsens();
   lightctrl();  //Activate light controller
   shumidctrl(); //Activate soil humidity controller
   //analogWrite(5, 200);
