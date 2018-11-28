@@ -11,8 +11,6 @@
 //Definición de librerías
 #include <math.h> //Libreria de matematicas para la función logaritmo
 #include <PID_v1.h> //Libreria de PID para control de iluminacion
-#include <SPI.h>  //Libreria para comunicacion SPI con la tarjeta SD (no se necesita SISE)
-#include <SD.h> //Libreria para SD (no SISE)
 #include <Wire.h> //Libreria para comunicarse DS1307 reloj de tiempo real
 #include "DS1307.h" //Libreria del reloj de tiempo real (RTC)
 #include "Arduino.h" //Se añade en el ejemplo del sunlight sensor
@@ -20,14 +18,19 @@
 
 //Definicón de pines
 #define LDR 0 //Fotocelda para control de iluminacion visible blanca
+
 #define SOIL 1  //Sensor de humedad de la tierra
+
 #define PH 2 //Sensor de ph
+
 #define LM35 3  //Sensor de temperatura del suelo
-#define WVALVE 4  //Electrovalvula para irrigacion
+
+#define WVALVE 4  //Electrovalvula para irrigacion FALTA POR IMPLEMENTAR
+
+#define UVLED 18 // FALTA POR IMPLEMENTAR
 #define IRLED 5  //LEDs infrarojos en pin 5
 #define PLED 6  //LEDs blancos de potencia
-#define CS 8 //CS pin for microSD Shield on pin D8 (no SISE)
-#define UVLED 18 // FALTA POR IMPLEMENTAR
+
 
 //Definición de constantes
 const unsigned long TSAMR = 3000; //Periodo de muestreo para almacenar variables
@@ -52,10 +55,12 @@ float luzBlanca = 0,  //Luz blanca (luz visible)
       errorHumedadSuelo = 0, //Error de humedad de la tierra
 
       spLuzBlanca = 300,  //Set-point (Valor deseado) de iluminacion blanca (valor por defecto en 300 lux)
+      spLuzUv = 300,
+      spLuzIR = 300,
       spHumedadSuelo = 50;  //Set-point (Valor deseado) de humedad del suelo (valor por defeto en 50%)
 
 unsigned int hrs = 0; //Variable para almacenar las horas (HOUR) del reloj de tiempo real
-unsigned long grad = 0; //Define grad as unsigned long for storing the servo degree position (no SISE)
+
 
 //Variables para media movil y control PID
 double spLuz = 600,
@@ -64,30 +69,33 @@ double spLuz = 600,
        temperaturaEntrada = 0,
        phEntrada = 0,
        luzInfrarrojaEntrada = 0,
+       luzUvEntrada = 0, 
        luzSalida = 0;
 
-unsigned int estadoValvula = 0; //Variable para almacenar el estado de la válvula de irrigacion
+unsigned int estadoValvula = 0; //Variable para almacenar el estado de la válvula 
 
 //Variables para media movil
 int lecturaLuz[NUMREADS] = {0},
-                           lecturaHumedadSuelo[NUMREADS] = {0},
-                               lecturaTemperatura[NUMREADS] = {0},
-                                   lecturaPh[NUMREADS] = {0},
-                                       lecturaInfrarroja[NUMREADS] = {0};
+    lecturaHumedadSuelo[NUMREADS] = {0},
+    lecturaTemperatura[NUMREADS] = {0},
+    lecturaPh[NUMREADS] = {0},
+    lecturaInfrarroja[NUMREADS] = {0}
+    lecturaUv[NUMREADS] = {0};
 
 int indiceLuz = 0,
     indiceHumedadSuelo = 0,
     indiceTemperatura = 0,
     indicePh = 0,
-    indiceInfrarroja = 0;
+    indiceInfrarroja = 0, 
+    indiceUv = 0;
 
 long totalLuz = 0,
      totalHumedadSuelo = 0,
      totalTemperatura = 0,
      totalPH = 0,
-     totalIR = 0;
+     totalIR = 0,
+     totalUv = 0;
 
-char lectura[4] = {'\0'};  //Vector recibido desde el computador (para mejorar SISE desde RaspberryPI)
 
 //Variables para el tiempo
 unsigned long tiempoActual = 0; //Tiempo actual de todo millis()
@@ -101,6 +109,8 @@ unsigned long tiempoRelativoPh = 0;  //Tiempo relativo de muestreo del sensor pH
 PID myPID(&luzEntrada, &luzSalida, &spLuz, CONSKP, CONSKI, CONSKD, DIRECT);
 DS1307 clock;//Objeto para el uso de los métodos del RTC
 SI114X SI1145 = SI114X(); //Objeto para el sensor de luz
+
+
 
 //Métodos y subrutinas
 
@@ -171,16 +181,39 @@ unsigned long smoothIR(long &total, int *readings, int &readIndex) {
   return total / NUMREADS;
 }
 
+unsigned long smoothUV(long &total, int *readings, int &readIndex) {
+  // subtract the last reading
+  total = total - readings[readIndex];
+  // read from the sensor:
+  readings[readIndex] = SI1145.ReadUV();
+  // add the reading to the total:
+  total = total + readings[readIndex];
+  // advance to the next position in the array:
+  readIndex = readIndex + 1;
+
+  // if we're at the end of the array...
+  if (readIndex >= NUMREADS) {
+    // ...wrap around to the beginning:
+    readIndex = 0;
+  }
+
+  // calculate the average:
+  return total / NUMREADS;
+}
+
+
 void leerSensores() { //Read sensors information and store it in variables
   luzEntrada = smooth(LDR, totalLuz, lecturaLuz, indiceLuz);
+  luzInfrarrojaEntrada = smoothIR(totalIR, lecturaInfrarroja, indiceInfrarroja);
+  luzUvEntrada = smoothUV(totalUv, lecturaUv, indiceUv);
   humedadSueloEntrada = smooth(SOIL, totalHumedadSuelo, lecturaHumedadSuelo, indiceHumedadSuelo);
   temperaturaEntrada = smooth(LM35, totalTemperatura, lecturaTemperatura, indiceTemperatura);
   phEntrada = smoothPH(PH, totalPH, lecturaPh, indicePh);
-  luzInfrarrojaEntrada = smoothIR(totalIR, lecturaInfrarroja, indiceInfrarroja);
   tiempoRelativo = tiempoActual - tiempoInicial;
   if (tiempoRelativo >= TSAMR) {
     //luzEntrada = analogRead(LDR);
-    luzUltravioleta = SI1145.ReadUV() / 100.0; //Para que tome nuevamente los valores de UV IR
+    //luzUltravioleta = SI1145.ReadUV() / 100.0; //Para que tome nuevamente los valores de UV IR
+    luzUltravioleta = luzUvEntrada;
     luzInfrarroja = luzInfrarrojaEntrada;
     luzBlanca  = luzEntrada * 5.0 / 1023.0;  //Convierto a voltios la iluminacion blanca
     luzBlanca  = 13.788 * exp(1.3413 *   luzBlanca ); //Convierto o proceso la iluminacion en lumens
@@ -194,53 +227,7 @@ void leerSensores() { //Read sensors information and store it in variables
     //printsens();
     //RTC get time
     clock.getTime();
-    //SD Logging
-    String datalog = ""; //Define datalog as string for storing data in SD as text
-    //datalog += String(clock.hour, DEC);
-    //datalog += ":";
-    //datalog += String(clock.minute, DEC);
-    //datalog += ":";
-    //datalog += String(clock.second, DEC);
-    //datalog += ",";
-    //datalog += String(clock.dayOfMonth, DEC);
-    //datalog += "/";
-    //datalog += String(clock.month, DEC);
-    //datalog += "/";
-    //datalog += String(clock.year, DEC);
-    //datalog += ",";
-    //datalog += String(spLuzBlanca, 4);
-    //datalog += ",";
-    //datalog += String(luzSalida, DEC);
-    //datalog += ",";
-    //datalog += String(spHumedadSuelo, 4);
-    //datalog += ",";
-    datalog += String(luzBlanca, 4);
-    datalog += ",";
-    datalog += String(ph, 4);
-    datalog += ",";
-    datalog += String(luzInfrarroja, 4);
-    datalog += ",";
-    datalog += String(humedadSuelo, 4);
-    datalog += ",";
-    datalog += String(luzUltravioleta, 4);
-    datalog += ",";
-    datalog += String(temperaturaSuelo, 4);
-    datalog += ",";
-    datalog += String(estadoValvula, DEC);
-
-//
-//    File dataFile = SD.open("datalog.txt", FILE_WRITE);
-//    // if the file is available, write to it:
-//    if (dataFile) {
-//      dataFile.println(datalog);
-//      dataFile.close();
-//      // print to the serial port too:
-//      //Serial.println("Success logging data");
-//    }
-//    // if the file isn't open, pop up an error:
-//    else {
-//      //Serial.println("error opening datalog.txt");
-//    }
+    
     tiempoInicial = millis();
   }
 }
@@ -259,16 +246,16 @@ void printsens() { //Prints sensors information on Serial monitor
   Serial.print(clock.year, DEC);
   Serial.print(" Luminous flux: ");
   Serial.print(luzBlanca);
+  Serial.print(" *C luzInfrarroja Sensor: ");
+  Serial.print(luzInfrarroja);
+  Serial.print(" lux luzUltravioleta Sensor: ");
+  Serial.print(luzUltravioleta);
   Serial.print(" lux Soil Moisture: ");
   Serial.print(humedadSuelo);
   Serial.print(" % Valve: ");
   Serial.print(estadoValvula);
   Serial.print(" Soil Temperature: ");
   Serial.print(temperaturaSuelo);
-  Serial.print(" *C luzInfrarroja Sensor: ");
-  Serial.print(luzInfrarroja);
-  Serial.print(" lux luzUltravioleta Sensor: ");
-  Serial.print(luzUltravioleta);
   Serial.print(" ph Sensor: ");
   Serial.println(ph);
 }
@@ -296,27 +283,19 @@ void shumidctrl() { //Soil Humidity Controller
   }
 }
 
-void SDinitialize() {
-  //Serial.print("Initializing SD card...");
-
-  // see if the card is present and can be initialized:
-  if (!SD.begin(CS)) {
-    //Serial.println("Card failed, or not present");
-    // don't do anything more:
-    return;
-  }
-  //Serial.println("card initialized.");
-}
-
 void MeasInitialize() {
   for (unsigned int i = 0; i < 80; i++) {
     luzEntrada = smooth(LDR, totalLuz, lecturaLuz, indiceLuz);
+    luzInfrarrojaEntrada = smoothIR(totalIR, lecturaInfrarroja, indiceInfrarroja);
+    luzUvEntrada = smoothUV(totalUv, lecturaUv, indiceUv);
     humedadSueloEntrada = smooth(SOIL, totalHumedadSuelo, lecturaHumedadSuelo, indiceHumedadSuelo);
     temperaturaEntrada = smooth(LM35, totalTemperatura, lecturaTemperatura, indiceTemperatura);
     phEntrada = smooth(PH, totalPH, lecturaPh, indicePh);
   }
   luzBlanca  = luzEntrada * 5.0 / 1023.0;
   luzBlanca  = 13.788 * exp(1.3413 * luzBlanca);
+  luzInfrarroja = luzInfrarrojaEntrada;
+  luzUltravioleta = luzUvEntrada;
   humedadSuelo = flmap(humedadSueloEntrada, SOIL_MADC_AIR, SOIL_MADC_WATER, SOIL_MO_AIR, SOIL_MO_WATER);
   //m = constrain(humedadSueloEntrada * 100.0 / 845.0, 0, 100);
   temperaturaSuelo = temperaturaEntrada * 500.0 / 1023.0;
@@ -328,6 +307,7 @@ void setup() {
   pinMode(WVALVE, OUTPUT);
   pinMode(PLED, OUTPUT);
   pinMode(IRLED, OUTPUT);
+  pinMode(UVLED, OUTPUT);
 
   //luzSalida cleaning
   digitalWrite(WVALVE, LOW);
@@ -337,15 +317,10 @@ void setup() {
   //Communications
   Serial.begin(9600);
   myPID.SetMode(AUTOMATIC);
-  SDinitialize();
   clock.begin();
   while (!SI1145.Begin());
   MeasInitialize();
-  //  clock.fillByYMD(2016, 3, 29); //Jan 19,2013
-  //  clock.fillByHMS(16, 37, 15); //15:28 30"
-  //  clock.fillDayOfWeek(THU);//Saturday
-  //  clock.setTime();//write time to the RTC chip
-  //tini initialization
+
   tiempoInicial = millis();
   tiempoInicialPh = millis();
 }
