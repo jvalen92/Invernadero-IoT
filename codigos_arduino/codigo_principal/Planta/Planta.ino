@@ -82,7 +82,7 @@ int lecturaLuz[NUMREADS] = {0},
     lecturaHumedadSuelo[NUMREADS] = {0},
     lecturaTemperatura[NUMREADS] = {0},
     lecturaPh[NUMREADS] = {0},
-    lecturaInfrarroja[NUMREADS] = {0}
+    lecturaInfrarroja[NUMREADS] = {0},
     lecturaUv[NUMREADS] = {0};
 
 int indiceLuz = 0,
