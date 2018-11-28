@@ -54,7 +54,7 @@ def sendArduino(valores_recibir):
     aString = aString + ','
     ser.write(aString.encode('ascii'))
 
-
+"""
 # Para pruebas
 while 1:
     sendArduino(valores_recibir)
@@ -63,3 +63,4 @@ while 1:
    # data = ser.readline().decode('ascii')
    # print(data)
     print('end')
+"""

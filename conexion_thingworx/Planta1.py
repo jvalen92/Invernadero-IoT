@@ -2,7 +2,8 @@ import os
 import json
 import requests
 import time
-
+import datetime
+import serialRaspberry as ras
 
 # Definiendo sistema operativo para la variable clear que sirve para limpiar la pantalla
 sos = os.name
@@ -13,9 +14,9 @@ elif sos == 'nt':
     clear = 'cls'
 
 # Variables
-dic = {"s_luz_blanca_sise": 5, "s_ph_sise": 6, "s_luz_infrarroja_sise": 7, "s_humedad_suelo_sise": 8,
-       "s_luz_uv_sise": 9, "s_temperatura_suelo_sise": 34, "s_valvula_sise": True}
-tiempo = 5  # Tiempo para enviar y recibir datos
+
+iteration = 0
+tiempo = 0  # Tiempo para enviar y recibir datos
 dics = {}
 
 # Declaracion de estructuras utiles
@@ -35,11 +36,11 @@ objetos = {"planta1": {}}
 # Valores oficiales
 
 claves_enviar = {
-    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise", "s_temperatura_suelo_sise", "s_valvula_sise"],
+    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise", "s_temperatura_suelo_sise"],
 }
 
 claves_recibir = {
-    "Plant_sise": ["a_humedad_suelo_sise",  "a_ph_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise", "a_temperatura_suelo_sise", "a_valvula_sise"],
+    "Plant_sise": ["a_humedad_suelo_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise"],
 }
 
 # Valores que se enviaran
@@ -50,20 +51,17 @@ valores_enviar = {
         "s_luz_blanca_sise": "0",
         "s_humedad_suelo_sise": "0",
         "s_ph_sise": "0",
-        "s_temperatura_suelo_sise": "0",
-        "s_valvula_sise": "0"}
+        }
 
 }
 
 valores_recibir = {
     "planta1": {
         "a_humedad_suelo_sise": "0",
-        "a_ph_sise": "0",
         "a_luz_infrarroja_sise": "0",
         "a_luz_uv_sise": "0",
         "a_luz_blanca_sise": "0",
-        "a_temperatura_suelo_sise": "0",
-        "a_valvula_sise": "0"}
+        }
 
 }
 
@@ -165,25 +163,53 @@ miObjeto = "planta1"
 # valores recibir a
 
 
-def setValues():
+def setValuesToThingworx(dic):
+   
     for valoruni in valores_enviar["planta1"]:
         if(valoruni[0] == 's'):
-
             setProperty(valoruni, str(dic[valoruni]))
+
+
+def setArduinoData():
+    ras.sendArduino(dics)
+
+def getArduinoData():
+
+    
+    return ras.getArduino()
 
 
 def main():
     getAllServerData(objetos)
     getAllServerData(valores_recibir)
+    
+    setArduinoData()
 
-    setValues()
+    gett=getArduinoData()
+    
+    if(gett!=None):
+
+
+        now = datetime.datetime.now()
+        print "\n"
+        print now.strftime("%Y-%m-%d %H:%M")
+
+        for key,value in dics.iteritems():
+            print key, " : ", dics[key]
+
+        for key,value in gett.iteritems():
+            print key, " : ", gett[key]
+        
+        setValuesToThingworx(gett)
+    
+
+    
 
     # Enviar al servidor todos los datos
     setAllServerData(valores_enviar)
-    printAllData()
+    #printAllData()
 
 
-anterior = 0
 
 
 while(True):
