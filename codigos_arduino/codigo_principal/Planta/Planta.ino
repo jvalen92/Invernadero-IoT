@@ -39,8 +39,11 @@ double CONSKP = 0.02, CONSKI = 1, CONSKD = 0.00001; //Constantes proporcional, i
 const float OFFSET = 0.00;  //OFFSET de voltaje para el sensor de ph
 const unsigned long MAXTPH = 20;  //Tiempo de sampling del sensor de ph (min 20 ms)
 const int NUMREADS = 40;  //Maximo de muestras a medir para la media movil (longitud del vector)
+const int TOTAL_VALORES_RASP = 5;
 
 //Definición de variables
+float valoresRasp[TOTAL_VALORES_RASP] = {0}; //Arreglo que guardara los valores recibidos desde la raspberry
+
 float luzBlanca = 0,  //Luz blanca (luz visible)
       luzInfrarroja = 0, //Luz infraroja
       luzUltravioleta = 0, //Luz UV
@@ -228,19 +231,19 @@ void leerSensores() { //Read sensors information and store it in variables
     datalog += ",";
     datalog += String(estadoValvula, DEC);
 
-//
-//    File dataFile = SD.open("datalog.txt", FILE_WRITE);
-//    // if the file is available, write to it:
-//    if (dataFile) {
-//      dataFile.println(datalog);
-//      dataFile.close();
-//      // print to the serial port too:
-//      //Serial.println("Success logging data");
-//    }
-//    // if the file isn't open, pop up an error:
-//    else {
-//      //Serial.println("error opening datalog.txt");
-//    }
+    //
+    //    File dataFile = SD.open("datalog.txt", FILE_WRITE);
+    //    // if the file is available, write to it:
+    //    if (dataFile) {
+    //      dataFile.println(datalog);
+    //      dataFile.close();
+    //      // print to the serial port too:
+    //      //Serial.println("Success logging data");
+    //    }
+    //    // if the file isn't open, pop up an error:
+    //    else {
+    //      //Serial.println("error opening datalog.txt");
+    //    }
     tiempoInicial = millis();
   }
 }
@@ -323,6 +326,23 @@ void MeasInitialize() {
   ph = phEntrada * 5.0 * 3.5 / 1023.0 + OFFSET;
 }
 
+void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las variables correspondientes
+  if (Serial.available()) {
+    String recibido = Serial.readString();
+    int r = 0;
+    int t = 0;
+    for (int i = 0; i < recibido.length(); i++) {
+      if (recibido.charAt(i) == ',') {
+        valoresRasp[t] = recibido.substring(r, i).toFloat();
+        r = (i + 1);
+        t++;
+      }
+    }
+  }
+
+  //Aqui va la parte de modificar las variables de los actuadores necesarios.
+}
+
 void setup() {
   //Pin configuration
   pinMode(WVALVE, OUTPUT);
@@ -353,7 +373,7 @@ void setup() {
 void loop() {
   tiempoActual = millis();
   leerSensores();
-  //printsens();
+  //setValoresRasp();
   lightctrl();  //Activate light controller
   shumidctrl(); //Activate soil humidity controller
   //analogWrite(5, 200);
