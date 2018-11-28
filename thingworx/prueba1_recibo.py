@@ -1,7 +1,7 @@
 import json
 import requests
 
-url = "http://iot.dis.eafit.edu.co/Thingworx/Things/PruebaPlant1_sise/Properties/s_humedad_suelo_sise"
+url = "http://iot.dis.eafit.edu.co/Thingworx/Things/planta1_sise_v1/Properties/s_humedad_suelo_sise"
 
 headers = {
     'appKey': "d13445f2-6c11-46f9-9352-efdedf394208",

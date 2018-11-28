@@ -25,7 +25,7 @@
 
 #define LM35 3  //Sensor de temperatura del suelo
 
-#define WVALVE 4  //Electrovalvula para irrigacion FALTA POR IMPLEMENTAR
+#define WVALVE 4  //Electrovalvula para irrigacion FALTA POR IMPLEMENTAR, true = irrigación, false = goteo
 
 #define UVLED 18 // FALTA POR IMPLEMENTAR
 #define IRLED 5  //LEDs infrarojos en pin 5
@@ -57,6 +57,7 @@ float luzBlanca = 0,  //Luz blanca (luz visible)
       errorIluminacion = 0, //Error de iluminacion
       errorHumedadSuelo = 0, //Error de humedad de la tierra
 
+      //Set points
       spLuzBlanca = 300,  //Set-point (Valor deseado) de iluminacion blanca (valor por defecto en 300 lux)
       spLuzUv = 300,
       spLuzIR = 300,
@@ -72,24 +73,24 @@ double spLuz = 600,
        temperaturaEntrada = 0,
        phEntrada = 0,
        luzInfrarrojaEntrada = 0,
-       luzUvEntrada = 0, 
+       luzUvEntrada = 0,
        luzSalida = 0;
 
-unsigned int estadoValvula = 0; //Variable para almacenar el estado de la válvula 
+unsigned int estadoValvula = 0; //Variable para almacenar el estado de la válvula
 
 //Variables para media movil
 int lecturaLuz[NUMREADS] = {0},
-    lecturaHumedadSuelo[NUMREADS] = {0},
-    lecturaTemperatura[NUMREADS] = {0},
-    lecturaPh[NUMREADS] = {0},
-    lecturaInfrarroja[NUMREADS] = {0},
-    lecturaUv[NUMREADS] = {0};
+                           lecturaHumedadSuelo[NUMREADS] = {0},
+                               lecturaTemperatura[NUMREADS] = {0},
+                                   lecturaPh[NUMREADS] = {0},
+                                       lecturaInfrarroja[NUMREADS] = {0},
+                                           lecturaUv[NUMREADS] = {0};
 
 int indiceLuz = 0,
     indiceHumedadSuelo = 0,
     indiceTemperatura = 0,
     indicePh = 0,
-    indiceInfrarroja = 0, 
+    indiceInfrarroja = 0,
     indiceUv = 0;
 
 long totalLuz = 0,
@@ -230,7 +231,24 @@ void leerSensores() { //Read sensors information and store it in variables
     //printsens();
     //RTC get time
     clock.getTime();
-    
+
+    String datalog = "";
+    datalog += String(luzBlanca, 4);
+    datalog += ",";
+    datalog += String(ph, 4);
+    datalog += ",";
+    datalog += String(luzInfrarroja, 4);
+    datalog += ",";
+    datalog += String(humedadSuelo, 4);
+    datalog += ",";
+    datalog += String(luzUltravioleta, 4);
+    datalog += ",";
+    datalog += String(temperaturaSuelo, 4);
+    datalog += ",";
+    datalog += String(estadoValvula, DEC);
+    Serial.println(datalog);
+
+
     tiempoInicial = millis();
   }
 }

@@ -36,11 +36,11 @@ objetos = {"planta1": {}}
 # Valores oficiales
 
 claves_enviar = {
-    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise", "s_temperatura_suelo_sise"],
+    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise"]
 }
 
 claves_recibir = {
-    "Plant_sise": ["a_humedad_suelo_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise"],
+    "Plant_sise": ["a_humedad_suelo_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise", "a_electro_val_sise","a_motobomba_sise"],
 }
 
 # Valores que se enviaran
@@ -51,6 +51,7 @@ valores_enviar = {
         "s_luz_blanca_sise": "0",
         "s_humedad_suelo_sise": "0",
         "s_ph_sise": "0",
+        
         }
 
 }
@@ -61,6 +62,9 @@ valores_recibir = {
         "a_luz_infrarroja_sise": "0",
         "a_luz_uv_sise": "0",
         "a_luz_blanca_sise": "0",
+        "a_motobomba_sise": "0",
+        "a_electro_val_sise":"0",
+
         }
 
 }
@@ -116,7 +120,6 @@ def printData(container):
 
 
 def printAllData():
-    print("Mostrando datos de todos los objetos...\n")
     for objeto in objetos:
         print(objeto+":")
         printer(objetos[objeto], True)
@@ -180,13 +183,14 @@ def getArduinoData():
 
 
 def main():
+    
     getAllServerData(objetos)
     getAllServerData(valores_recibir)
     
     setArduinoData()
 
     gett=getArduinoData()
-    
+
     if(gett!=None):
 
 
@@ -200,6 +204,7 @@ def main():
         for key,value in gett.iteritems():
             print key, " : ", gett[key]
         
+
         setValuesToThingworx(gett)
     
 

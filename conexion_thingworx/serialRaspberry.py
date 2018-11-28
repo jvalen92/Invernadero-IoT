@@ -29,7 +29,7 @@ import time
 """
 
 # Se establece la conexion
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+ser = serial.Serial('/dev/ttyACM1', 9600, timeout=1)
 time.sleep(1)
 
 
@@ -37,13 +37,14 @@ def getArduino():
     
     
     data = ser.readline().decode('ascii')
-    time.sleep(3)
+    time.sleep(1)
     data = data.strip()
     data = data.split(',')
-    if len(data)==5: 
+    print data
+    if len(data)==7: 
     
-        datosDic = {"s_luz_blanca_sise": data[4], "s_ph_sise": data[3], "s_luz_infrarroja_sise": data[0],
-                    "s_humedad_suelo_sise": data[1], "s_luz_uv_sise": data[2]}
+        datosDic = {"s_luz_blanca_sise": data[0], "s_ph_sise": data[1], "s_luz_infrarroja_sise": data[2],
+                    "s_humedad_suelo_sise": data[3], "s_luz_uv_sise": data[4]}
     else: 
         datosDic =  None
         # return datosDic
@@ -56,7 +57,8 @@ def sendArduino(valores_recibir):
     aString = ','.join(map(str, aList))
     #aString = aString
     ser.write(aString.encode('ascii'))
-    time.sleep(3)
+    #print aString
+    time.sleep(1)
 
 """
 # Para pruebas
