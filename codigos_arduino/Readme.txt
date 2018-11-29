@@ -1,1 +1,0 @@
-Códigos de arduino para manejo de sensores y actuadores. Se encuentras los principales testeos de los actuadores y sensores realizados por diferentes miembros del semillero. El código principal se encuentra en la carpeta codigo_principal, el cual es una versión adaptada y en construcción del código realizado por el profesor David Velasquez.
