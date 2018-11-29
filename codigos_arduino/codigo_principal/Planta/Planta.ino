@@ -25,9 +25,9 @@
 
 #define LM35 3  //Sensor de temperatura del suelo
 
-#define WVALVEIRRIGACION 4  //Electrovalvula para irrigacion 
-#define WVALVEGOTEO 5  //Electrovalvula para goteo 
-#define MOTOPIN 6 //La motobomba 
+#define WVALVEIRRIGACION 7  //Electrovalvula para irrigacion 
+#define WVALVEGOTEO 8  //Electrovalvula para goteo 
+#define MOTOPIN 9 //La motobomba 
 #define UVLED 13 // FALTA POR IMPLEMENTAR
 #define IRLED 12  //LEDs infrarojos en pin 5
 #define PLED 11  //LEDs blancos de potencia
@@ -43,7 +43,7 @@ double CONSKP = 0.02, CONSKI = 1, CONSKD = 0.00001; //Constantes proporcional, i
 const float OFFSET = 0.00;  //OFFSET de voltaje para el sensor de ph
 const unsigned long MAXTPH = 20;  //Tiempo de sampling del sensor de ph (min 20 ms)
 const int NUMREADS = 40;  //Maximo de muestras a medir para la media movil (longitud del vector)
-const int TOTAL_VALORES_RASP = 5;
+const int TOTAL_VALORES_RASP = 7;
 
 
 //Definición de variables
@@ -66,7 +66,8 @@ float luzBlanca = 0,  //Luz blanca (luz visible)
       spHumedadSuelo = 50;  //Set-point (Valor deseado) de humedad del suelo (valor por defeto en 50%)
 
 unsigned int hrs = 0; //Variable para almacenar las horas (HOUR) del reloj de tiempo real
-bool outputValve = true;  //true = irrigación, false = goteo
+bool outputValve = 0;  //true = irrigación, false = goteo
+bool motobomba = 0; //Para saber si se prende o se apaga la motobomba
 
 //Variables para media movil y control PID
 double spLuz = 600,
@@ -118,7 +119,7 @@ unsigned long tiempoRelativoPh = 0;  //Tiempo relativo de muestreo del sensor pH
 //Definiciones e inicializaciones para librerías
 PID PIDBlanca(&luzEntrada, &luzSalida, &spLuz, CONSKP, CONSKI, CONSKD, DIRECT);
 PID PIDIR(&luzInfrarrojaEntrada, &luzInfrarrojaSalida, &spIR, CONSKP, CONSKI, CONSKD, DIRECT);
-PID PIDUV(&luzUvEntrada, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT); 
+PID PIDUV(&luzUvEntrada, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT);
 DS1307 clock;//Objeto para el uso de los métodos del RTC
 SI114X SI1145 = SI114X(); //Objeto para el sensor de luz
 
@@ -307,14 +308,14 @@ void shumidctrl() { //Soil Humidity Controller
     digitalWrite(MOTOPIN, LOW);
     digitalWrite(WVALVEGOTEO, LOW);
     digitalWrite(WVALVEIRRIGACION, LOW);
-    
+
     estadoValvula = 0;
   }
-  else if (errorHumedadSuelo > 2) { //else if the soil moisture is below set point (pos error), turn on water valve
-    if(outputValve){
+  else if (errorHumedadSuelo > 2 ) { //else if the soil moisture is below set point (pos error), turn on water valve
+    if (outputValve) {
       digitalWrite(WVALVEGOTEO, LOW);
       digitalWrite(WVALVEIRRIGACION, HIGH);
-    }else{
+    } else {
       digitalWrite(WVALVEGOTEO, HIGH);
       digitalWrite(WVALVEIRRIGACION, LOW);
     }
@@ -355,13 +356,26 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
     int t = 0;
     for (int i = 0; i < recibido.length(); i++) {
       if (recibido.charAt(i) == ',') {
-        valoresRasp[t] = recibido.substring(r, i).toFloat();
+        String value = recibido.substring(r, i);
+        if (value == "True") {
+          valoresRasp[t] = 1;
+        } else if (value == "False") {
+          valoresRasp[t] = 0;
+        } else {
+          valoresRasp[t] = recibido.substring(r, i).toFloat();
+        }
+
         r = (i + 1);
         t++;
       }
     }
   }
-
+  spLuzBlanca = valoresRasp[6];
+  spLuzUv = valoresRasp[5];
+  spLuzIR = valoresRasp[4];
+  spHumedadSuelo = valoresRasp[2];
+  outputValve = valoresRasp[0];
+  motobomba = valoresRasp[1];
   //Aqui va la parte de modificar las variables de los actuadores necesarios.
 }
 
@@ -374,7 +388,11 @@ void setup() {
   pinMode(IRLED, OUTPUT);
   pinMode(UVLED, OUTPUT);
   pinMode(MOTOPIN, OUTPUT);
-  
+
+
+  pinMode(LED_BUILTIN, OUTPUT);
+
+
   //luzSalida cleaning
   digitalWrite(WVALVEIRRIGACION, LOW);
   digitalWrite(WVALVEGOTEO, LOW);
@@ -399,7 +417,7 @@ void setup() {
 void loop() {
   tiempoActual = millis();
   leerSensores();
-  //setValoresRasp();
+  getValoresRasp();
   lightctrl();  //Activate light controller
   shumidctrl(); //Activate soil humidity controller
   //analogWrite(5, 200);

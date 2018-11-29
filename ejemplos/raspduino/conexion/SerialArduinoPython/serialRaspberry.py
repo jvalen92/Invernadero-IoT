@@ -18,7 +18,7 @@ import serial
 import time
 
 # Se puso este diccionario mientras se soluciona lo de sacar el diccionario de planta 1
-"""valores_recibir = {
+valores_recibir = {
     "a_humedad_suelo_sise": "85",
     "a_ph_sise": "7.4",
     "a_luz_infrarroja_sise": "300",
@@ -26,7 +26,7 @@ import time
     "a_luz_blanca_sise": "400",
     "a_temperatura_suelo_sise": "40.6",
     "a_valvula_sise": "1"}
-"""
+
 
 # Se establece la conexion
 ser = serial.Serial('COM5', 9600, timeout=1)
@@ -34,21 +34,18 @@ time.sleep(1)
 
 
 def getArduino():
-
+    print('entrando a getArduino')
     data = ser.readline().decode('ascii')
-    time.sleep(1)
     data = data.strip()
     data = data.split(',')
-    print data
     if len(data) == 7:
-
         datosDic = {"s_luz_blanca_sise": data[0], "s_ph_sise": data[1], "s_luz_infrarroja_sise": data[2],
-                    "s_humedad_suelo_sise": data[3], "s_luz_uv_sise": data[4]}
-    else:
-        datosDic = None
+                    "s_humedad_suelo_sise": data[3], "s_luz_uv_sise": data[4], "s_temperatura_suelo_sise": data[5],
+                    "s_valvula_sise": data[6]}
+        print(datosDic)
         # return datosDic
-
-    return datosDic
+    else:
+        data[len(data):] = '0'
 
 
 def sendArduino(valores_recibir):
@@ -56,9 +53,6 @@ def sendArduino(valores_recibir):
     aString = ','.join(map(str, aList))
     aString = aString + ','
     ser.write(aString.encode('ascii'))
-    print aString
-    time.sleep(1)
-
 
 """
 # Para pruebas
