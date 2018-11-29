@@ -241,17 +241,17 @@ void leerSensores() { //Read sensors information and store it in variables
     clock.getTime();
 
     String datalog = "";
-        datalog += String(luzBlanca, 4);
-        datalog += ",";
-        datalog += String(ph, 4);
-        datalog += ",";
-        datalog += String(luzInfrarroja, 4);
-        datalog += ",";
+    datalog += String(luzBlanca, 4);
+    datalog += ",";
+    datalog += String(ph, 4);
+    datalog += ",";
+    datalog += String(luzInfrarroja, 4);
+    datalog += ",";
     datalog += String(humedadSuelo, 4);
-        datalog += ",";
-        datalog += String(luzUltravioleta, 4);
-        datalog += ",";
-        datalog += String(temperaturaSuelo, 4);
+    datalog += ",";
+    datalog += String(luzUltravioleta, 4);
+    datalog += ",";
+    datalog += String(temperaturaSuelo, 4);
     Serial.println(datalog);
 
 
@@ -367,10 +367,29 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
       }
     }
   }
-  spLuzBlanca = valoresRasp[7];
-  spLuzUv = valoresRasp[6];
-  spLuzIR = valoresRasp[5];
-  spHumedadSuelo = valoresRasp[3];
+
+  //Los siguientes condicionales son porque en la parte de control solo podemos garantizar un control hasta el 60 % del valor
+  if (valoresRasp[7] <= 600) {
+    spLuzBlanca = valoresRasp[7];
+  } else {
+    spLuzBlanca = 600;
+  }
+  if (valoresRasp[6] <= 600) {
+    spLuzUv = valoresRasp[6];
+  } else {
+    spLuzUv = 600;
+  }
+  if (valoresRasp[5] <= 600) {
+    spLuzIR = valoresRasp[5];
+  } else {
+    spLuzIR = 600;
+  }
+
+  if (valoresRasp[3] <= 60) {
+    spHumedadSuelo = valoresRasp[3];
+  } else {
+    spHumedadSuelo = 60;
+  }
   estadoValvula = valoresRasp[1];
   motobomba = valoresRasp[2];
   modoManual = valoresRasp[0];
@@ -392,10 +411,9 @@ void funcionarManual() {
     digitalWrite(VALVULA_GOTEO, LOW);
     digitalWrite(VALVULA_IRRIGACION, LOW);
   }
-  // Lo comento por seguridad, ya que no sabemos si se puede prender los leds por pwm
-  //  analogWrite(UVLED, spLuzUv);
-  //  analogWrite(IRLED, spLuzIR);
-  //  analogWrite(PLED, spLuzBlanca);
+  analogWrite(UVLED, spLuzUv * (255.0 / 1000.0));
+  analogWrite(IRLED, spLuzIR * (255.0 / 1000.0));
+  analogWrite(PLED, spLuzBlanca * (255.0 / 1000.0));
 
   delay(1000);
 }
