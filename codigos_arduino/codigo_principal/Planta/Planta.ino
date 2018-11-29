@@ -44,6 +44,7 @@ const unsigned long MAXTPH = 20;  //Tiempo de sampling del sensor de ph (min 20 
 const int NUMREADS = 40;  //Maximo de muestras a medir para la media movil (longitud del vector)
 const int TOTAL_VALORES_RASP = 5;
 
+
 //Definición de variables
 float valoresRasp[TOTAL_VALORES_RASP] = {0}; //Arreglo que guardara los valores recibidos desde la raspberry
 
@@ -68,13 +69,17 @@ unsigned int hrs = 0; //Variable para almacenar las horas (HOUR) del reloj de ti
 
 //Variables para media movil y control PID
 double spLuz = 600,
+       spUv = 600,
+       spIR = 600,
        luzEntrada = 0,
        humedadSueloEntrada = 0,
        temperaturaEntrada = 0,
        phEntrada = 0,
        luzInfrarrojaEntrada = 0,
        luzUvEntrada = 0,
-       luzSalida = 0;
+       luzSalida = 0,
+       luzInfrarrojaSalida = 0,
+       luzUvSalida = 0;
 
 unsigned int estadoValvula = 0; //Variable para almacenar el estado de la válvula
 
@@ -110,7 +115,9 @@ unsigned long tiempoInicialPh = 0; //Tiempo inicial de pH
 unsigned long tiempoRelativoPh = 0;  //Tiempo relativo de muestreo del sensor pH
 
 //Definiciones e inicializaciones para librerías
-PID myPID(&luzEntrada, &luzSalida, &spLuz, CONSKP, CONSKI, CONSKD, DIRECT);
+PID PIDBlanca(&luzEntrada, &luzSalida, &spLuz, CONSKP, CONSKI, CONSKD, DIRECT);
+PID PIDIR(&luzInfrarrojaEntrada, &luzInfrarrojaSalida, &spIR, CONSKP, CONSKI, CONSKD, DIRECT);
+PID PIDIV(&luzUvEntrada, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT); 
 DS1307 clock;//Objeto para el uso de los métodos del RTC
 SI114X SI1145 = SI114X(); //Objeto para el sensor de luz
 
@@ -282,10 +289,17 @@ void printsens() { //Prints sensors information on Serial monitor
 }
 
 void lightctrl() {  //Light controller subroutine
-  spLuz = constrain(151.04 * log(spLuzBlanca) - 390.08, 0, 1023);
-  myPID.Compute();
-  analogWrite(PLED, luzSalida);
-  analogWrite(IRLED, luzSalida * 200.0 / 255.0);
+  spLuz = constrain(151.04 * log(spLuzBlanca) - 390.08, 0, 1023); //Pasa de lumens a valores analogos
+  spIR = constrain(151.04 * log(spLuzIR) - 390.08, 0, 1023);
+  spUv = constrain(151.04 * log(spLuzUv) - 390.08, 0, 1023);
+  PIDBlanca.Compute(); //Calcula que tanto se debe prender la luz blanca
+  PIDIR.Compute(); //Calcula que tanto se debe prender la luz IR
+  PIDUV.Compute(); //Calcula que tanto se debe prender la luz UV
+  //analogWrite(PLED, luzSalida);
+  //analogWrite(IRLED, luzSalida * 200.0 / 255.0);
+  analogWrite(PLED, PIDBlanca.Compute());
+  analogWrite(IRLED, PIDIR.Compute());
+  analogWrite(UVLED, PIDUV.Compute());
 }
 
 void shumidctrl() { //Soil Humidity Controller
@@ -351,10 +365,14 @@ void setup() {
   digitalWrite(WVALVE, LOW);
   estadoValvula = 0;
   digitalWrite(PLED, LOW);
+  digitalWrite(UVLED, LOW);
+  digitalWrite(IRLED, LOW);
 
   //Communications
   Serial.begin(9600);
-  myPID.SetMode(AUTOMATIC);
+  PIDBlanca.SetMode(AUTOMATIC);
+  PIDIR.SetMode(AUTnOMATIC);
+  PIDUV.SetMode(AUTOMATIC);
   clock.begin();
   while (!SI1145.Begin());
   MeasInitialize();
