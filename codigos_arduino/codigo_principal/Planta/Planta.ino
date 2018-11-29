@@ -292,11 +292,9 @@ void lightctrl() {  //Light controller subroutine
   PIDBlanca.Compute(); //Calcula que tanto se debe prender la luz blanca
   PIDIR.Compute(); //Calcula que tanto se debe prender la luz IR
   PIDUV.Compute(); //Calcula que tanto se debe prender la luz UV
-  //analogWrite(PLED, luzSalida);
-  //analogWrite(IRLED, luzSalida * 200.0 / 255.0);
-  analogWrite(PLED, PIDBlanca.Compute());
-  analogWrite(IRLED, PIDIR.Compute());
-  analogWrite(UVLED, PIDUV.Compute());
+  analogWrite(PLED, luzSalida);
+  analogWrite(IRLED, luzInfrarrojaSalida);
+  analogWrite(UVLED, luzUvSalida);
 }
 
 void shumidctrl() { //Soil Humidity Controller

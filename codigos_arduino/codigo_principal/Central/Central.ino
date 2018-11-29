@@ -30,9 +30,8 @@
 #define WLECHO 6  //Ultrasonic water level on pin D4
 #define WLTRIG 7 //Ultrasonic water level trig on pin D24
 #define WTPIN 3  //Water temperature on pin A3
-#define WLINVALVE 26 //Water level in valve in pin D26
 #define WTOUT 31 //Water resistor SSR out
-#define chipSelect 9 //CS pin for microSD Shield on pin D8
+#define WLINVALVE 26 //Water level in valve in pin D26
 
 //Library definitions and variables
 #define DHTTYPE DHT11   // DHT 11
@@ -57,6 +56,23 @@ const float wlo_min = 0; //Minimum water level
 const float wlo_max = 25; //Maximum water level
 const int numReadings = 40;
 const int numReadingsCO2 = 5;
+
+
+/*
+  Nombre     Pin Arduino
+  DIN -       4
+  SCLK -      3
+  CS -        2
+  Vcc -       5v
+  Gnd -       0v
+  Out -       Salida
+*/
+const byte CS    = 2;
+const byte CLOCK = 3;
+const byte DATA  = 4;
+const byte HALF_CLOCK_PERIOD = 2; //2 uS of clock period
+
+
 
 //Variable definitions
 volatile unsigned long halfRevFanIn = 0;  //Variable for counting pulses for Fan In Hall sensor
@@ -156,7 +172,7 @@ unsigned int smoothCO2(int pin, long &tot, int *reads, int &readInd) {
   // calculate the average:
   return tot / numReadingsCO2;
 }
-
+//Sensor ultrasonido 
 float sultra(byte echop, byte trigp) {
   twl = tact - tiniwl;
   if (twl >= 50) {
@@ -168,14 +184,15 @@ float sultra(byte echop, byte trigp) {
   }
   return Inputwl;
 }
-
+//revoluciones del ventilador
 void countRevFanIn() {
   halfRevFanIn++;
 }
-
+//revoluciones del ventilador
 void countRevFanOut() {
   halfRevFanOut++;
 }
+
 
 void RPMIn() {
   attachInterrupt(digitalPinToInterrupt(ENCFANIN), countRevFanIn, FALLING);
@@ -368,7 +385,8 @@ void printsens() { //Prints sensors information on Serial monitor
 
 void wlevelctrl() { //Water Level Controller
   ewl = spwl - wl;
-  if (ewl < -0.5) {  //If the water level error is less than -2 cm, turn off water valve
+  if (ewl < -0.5) {  //If the water level error is less than -2 cm, turn off water 
+  
     digitalWrite(WLINVALVE, LOW);
     WLINSTATE = 0;
   }
@@ -404,17 +422,6 @@ void CO2ctrl() { //CO2 Controller
   }
 }
 
-//void SDinitialize() {
-//  //Serial.print("Initializing SD card...");
-//
-//  // see if the card is present and can be initialized:
-//  if (!SD.begin(chipSelect)) {
-//    //Serial.println("Card failed, or not present");
-//    // don't do anything more:
-//    return;
-//  }
-//  //Serial.println("card initialized.");
-//}
 
 void MeasInitialize() {
   for (unsigned int i = 0; i < 80; i++) {
@@ -461,6 +468,25 @@ void labviewcomm() {
   }
 }
 
+
+void writeValue(uint16_t value)
+{
+  digitalWrite(CS, LOW);//start of 12 bit data sequence
+  digitalWrite(CLOCK, LOW);
+  value = value << 2;
+  for (int i = 11; i >= 0; i--)//send the 12 bit sample data
+  {
+    digitalWrite(DATA, (value & (1 << i)) >> i);//DATA ready
+    delayMicroseconds(HALF_CLOCK_PERIOD);
+    digitalWrite(CLOCK, HIGH);//DAC get DATA at positive edge
+    delayMicroseconds(HALF_CLOCK_PERIOD);
+    digitalWrite(CLOCK, LOW);
+  }
+  digitalWrite(CS, HIGH);//end 12 bit data sequence
+}
+
+//writeValue(700);//Valor de salida en voltaje
+
 void setup() {
   //Pin configuration
   pinMode(ENCFANIN, INPUT_PULLUP);
@@ -481,6 +507,14 @@ void setup() {
   WLINSTATE = 0;
   FANINSTATE = 0;
   FANOUTSTATE = 0;
+
+  //DAC
+  pinMode(DATA, OUTPUT);
+  pinMode(CLOCK, OUTPUT);
+  pinMode(CS, OUTPUT);
+  digitalWrite(CS, HIGH);
+  digitalWrite(DATA, LOW);
+  digitalWrite(CLOCK, LOW);
 
   //Communications
   Serial.begin(9600);
