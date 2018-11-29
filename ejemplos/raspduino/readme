@@ -1,0 +1,5 @@
+Comunicacion arduino raspberry por serial
+
+Raspduino se utiliza para prender un led.
+
+writing escribe en serial y reading recibe lo que se escribe
