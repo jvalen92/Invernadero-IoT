@@ -27,10 +27,10 @@
 
 #define WVALVEIRRIGACION 4  //Electrovalvula para irrigacion 
 #define WVALVEGOTEO 5  //Electrovalvula para goteo 
-#define MOTOPIN 6 //La motobomba :)
-#define UVLED 18 // FALTA POR IMPLEMENTAR
-#define IRLED 5  //LEDs infrarojos en pin 5
-#define PLED 6  //LEDs blancos de potencia
+#define MOTOPIN 6 //La motobomba 
+#define UVLED 13 // FALTA POR IMPLEMENTAR
+#define IRLED 12  //LEDs infrarojos en pin 5
+#define PLED 11  //LEDs blancos de potencia
 
 
 //Definición de constantes
@@ -118,7 +118,7 @@ unsigned long tiempoRelativoPh = 0;  //Tiempo relativo de muestreo del sensor pH
 //Definiciones e inicializaciones para librerías
 PID PIDBlanca(&luzEntrada, &luzSalida, &spLuz, CONSKP, CONSKI, CONSKD, DIRECT);
 PID PIDIR(&luzInfrarrojaEntrada, &luzInfrarrojaSalida, &spIR, CONSKP, CONSKI, CONSKD, DIRECT);
-PID PIDIV(&luzUvEntrada, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT); 
+PID PIDUV(&luzUvEntrada, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT); 
 DS1307 clock;//Objeto para el uso de los métodos del RTC
 SI114X SI1145 = SI114X(); //Objeto para el sensor de luz
 
@@ -375,10 +375,11 @@ void setup() {
   pinMode(PLED, OUTPUT);
   pinMode(IRLED, OUTPUT);
   pinMode(UVLED, OUTPUT);
-  pinmode(MOTOPIN, OUTPUT);
-
+  pinMode(MOTOPIN, OUTPUT);
+  
   //luzSalida cleaning
-  digitalWrite(WVALVE, LOW);
+  digitalWrite(WVALVEIRRIGACION, LOW);
+  digitalWrite(WVALVEGOTEO, LOW);
   estadoValvula = 0;
   digitalWrite(PLED, LOW);
   digitalWrite(UVLED, LOW);
@@ -387,7 +388,7 @@ void setup() {
   //Communications
   Serial.begin(9600);
   PIDBlanca.SetMode(AUTOMATIC);
-  PIDIR.SetMode(AUTnOMATIC);
+  PIDIR.SetMode(AUTOMATIC);
   PIDUV.SetMode(AUTOMATIC);
   clock.begin();
   while (!SI1145.Begin());
