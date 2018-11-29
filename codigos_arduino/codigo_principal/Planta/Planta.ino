@@ -25,8 +25,8 @@
 
 #define LM35 3  //Sensor de temperatura del suelo
 
-#define WVALVEIRRIGACION 7  //Electrovalvula para irrigacion 
-#define WVALVEGOTEO 8  //Electrovalvula para goteo 
+#define VALVULA_IRRIGACION 7  //Electrovalvula para irrigacion 
+#define VALVULA_GOTEO 8  //Electrovalvula para goteo 
 #define MOTOPIN 9 //La motobomba 
 #define UVLED 13 // FALTA POR IMPLEMENTAR
 #define IRLED 12  //LEDs infrarojos en pin 5
@@ -43,7 +43,7 @@ double CONSKP = 0.02, CONSKI = 1, CONSKD = 0.00001; //Constantes proporcional, i
 const float OFFSET = 0.00;  //OFFSET de voltaje para el sensor de ph
 const unsigned long MAXTPH = 20;  //Tiempo de sampling del sensor de ph (min 20 ms)
 const int NUMREADS = 40;  //Maximo de muestras a medir para la media movil (longitud del vector)
-const int TOTAL_VALORES_RASP = 7;
+const int TOTAL_VALORES_RASP = 8;
 
 
 //Definición de variables
@@ -66,8 +66,11 @@ float luzBlanca = 0,  //Luz blanca (luz visible)
       spHumedadSuelo = 50;  //Set-point (Valor deseado) de humedad del suelo (valor por defeto en 50%)
 
 unsigned int hrs = 0; //Variable para almacenar las horas (HOUR) del reloj de tiempo real
-bool outputValve = 0;  //true = irrigación, false = goteo
-bool motobomba = 0; //Para saber si se prende o se apaga la motobomba
+
+//Variables para control
+unsigned int estadoValvula = 0; //1 = irrigación, 0 = goteo
+unsigned int modoManual = 0;
+unsigned int motobomba = 0; //Para saber si se prende o se apaga la motobomba
 
 //Variables para media movil y control PID
 double spLuz = 600,
@@ -83,7 +86,6 @@ double spLuz = 600,
        luzInfrarrojaSalida = 0,
        luzUvSalida = 0;
 
-unsigned int estadoValvula = 0; //Variable para almacenar el estado de la válvula
 
 //Variables para media movil
 int lecturaLuz[NUMREADS] = {0},
@@ -254,7 +256,7 @@ void leerSensores() { //Read sensors information and store it in variables
     datalog += ",";
     datalog += String(temperaturaSuelo, 4);
     datalog += ",";
-    datalog += String(estadoValvula, DEC);
+    datalog += String(motobomba, DEC);
     Serial.println(datalog);
 
 
@@ -283,7 +285,7 @@ void printsens() { //Prints sensors information on Serial monitor
   Serial.print(" lux Soil Moisture: ");
   Serial.print(humedadSuelo);
   Serial.print(" % Valve: ");
-  Serial.print(estadoValvula);
+  Serial.print(motobomba);
   Serial.print(" Soil Temperature: ");
   Serial.print(temperaturaSuelo);
   Serial.print(" ph Sensor: ");
@@ -308,27 +310,27 @@ void shumidctrl() { //Soil Humidity Controller
   errorHumedadSuelo = spHumedadSuelo - humedadSuelo;
   if (errorHumedadSuelo < -2) {  //If the soil moisture is above set point (neg error), turn off all valves
     digitalWrite(MOTOPIN, LOW);
-    digitalWrite(WVALVEGOTEO, LOW);
-    digitalWrite(WVALVEIRRIGACION, LOW);
+    digitalWrite(VALVULA_GOTEO, LOW);
+    digitalWrite(VALVULA_IRRIGACION, LOW);
 
-    estadoValvula = 0;
+    motobomba = 0;
   }
   else if (errorHumedadSuelo > 2 ) { //else if the soil moisture is below set point (pos error), turn on water valve
-    if (outputValve) {
-      digitalWrite(WVALVEGOTEO, LOW);
-      digitalWrite(WVALVEIRRIGACION, HIGH);
+    if (estadoValvula) {
+      digitalWrite(VALVULA_GOTEO, LOW);
+      digitalWrite(VALVULA_IRRIGACION, HIGH);
     } else {
-      digitalWrite(WVALVEGOTEO, HIGH);
-      digitalWrite(WVALVEIRRIGACION, LOW);
+      digitalWrite(VALVULA_GOTEO, HIGH);
+      digitalWrite(VALVULA_IRRIGACION, LOW);
     }
     digitalWrite(MOTOPIN, HIGH);
-    estadoValvula = 1;
+    motobomba = 1;
   }
   else { //if the error is between -10% and 10%, keep the water valve off
     digitalWrite(MOTOPIN, LOW);
-    digitalWrite(WVALVEGOTEO, LOW);
-    digitalWrite(WVALVEIRRIGACION, LOW);
-    estadoValvula = 0;
+    digitalWrite(VALVULA_GOTEO, LOW);
+    digitalWrite(VALVULA_IRRIGACION, LOW);
+    motobomba = 0;
   }
 }
 
@@ -372,20 +374,43 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
       }
     }
   }
-  spLuzBlanca = valoresRasp[6];
-  spLuzUv = valoresRasp[5];
-  spLuzIR = valoresRasp[4];
-  spHumedadSuelo = valoresRasp[2];
-  outputValve = valoresRasp[0];
-  motobomba = valoresRasp[1];
+  spLuzBlanca = valoresRasp[7];
+  spLuzUv = valoresRasp[6];
+  spLuzIR = valoresRasp[5];
+  spHumedadSuelo = valoresRasp[3];
+  estadoValvula = valoresRasp[1];
+  motobomba = valoresRasp[2];
+  modoManual = valoresRasp[0];
   //Aqui va la parte de modificar las variables de los actuadores necesarios.
 }
 
+void funcionarManual() {
+  if (motobomba) {
+    digitalWrite(MOTOPIN, HIGH);
+    if (estadoValvula) {
+      digitalWrite(VALVULA_IRRIGACION, HIGH);
+      digitalWrite(VALVULA_GOTEO, LOW);
+    } else {
+      digitalWrite(VALVULA_GOTEO, HIGH);
+      digitalWrite(VALVULA_IRRIGACION, LOW);
+    }
+  } else {
+    digitalWrite(MOTOPIN, LOW);
+    digitalWrite(VALVULA_GOTEO, LOW);
+    digitalWrite(VALVULA_IRRIGACION, LOW);
+  }
+  // Lo comento por seguridad, ya que no sabemos si se puede prender los leds por pwm
+  //  analogWrite(UVLED, spLuzUv);
+  //  analogWrite(IRLED, spLuzIR);
+  //  analogWrite(PLED, spLuzBlanca);
+
+  delay(1000);
+}
 
 void setup() {
   //Pin configuration
-  pinMode(WVALVEIRRIGACION, OUTPUT);
-  pinMode(WVALVEGOTEO, OUTPUT);
+  pinMode(VALVULA_IRRIGACION, OUTPUT);
+  pinMode(VALVULA_GOTEO, OUTPUT);
   pinMode(PLED, OUTPUT);
   pinMode(IRLED, OUTPUT);
   pinMode(UVLED, OUTPUT);
@@ -396,8 +421,8 @@ void setup() {
 
 
   //luzSalida cleaning
-  digitalWrite(WVALVEIRRIGACION, LOW);
-  digitalWrite(WVALVEGOTEO, LOW);
+  digitalWrite(VALVULA_IRRIGACION, LOW);
+  digitalWrite(VALVULA_GOTEO, LOW);
   estadoValvula = 0;
   digitalWrite(PLED, LOW);
   digitalWrite(UVLED, LOW);
@@ -420,7 +445,13 @@ void loop() {
   tiempoActual = millis();
   leerSensores();
   getValoresRasp();
-  lightctrl();  //Activate light controller
-  shumidctrl(); //Activate soil humidity controller
-  //analogWrite(5, 200);
+  if (modoManual) {
+    //Manual
+    funcionarManual();
+  } else {
+    //Automatico
+    lightctrl();  //Activate light controller
+    shumidctrl(); //Activate soil humidity controller
+    //analogWrite(5, 200);
+  }
 }

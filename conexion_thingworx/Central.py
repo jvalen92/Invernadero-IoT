@@ -58,7 +58,9 @@ valores_enviar = {
 
 valores_recibir = {
     "central": {
-       "a_co2_sise":"0","a_temperatura_tanque_sise":"0"
+       "a_co2_sise":"0",
+        "a_temperatura_tanque_sise":"0",
+        "a_ventilardor_entrada_sise":"0"
 
         }
 

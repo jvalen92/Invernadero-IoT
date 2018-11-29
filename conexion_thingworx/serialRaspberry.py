@@ -16,6 +16,18 @@
 
 import serial
 import time
+import os
+
+# Definir arduino segun sistema operativo
+sos = os.name
+arduino = 'indefinido'
+
+if sos == 'posix':
+    # linux
+    arduino = '/dev/ttyACM0'
+elif sos == 'nt':
+    # windowns o mac
+    arduino = 'COM5'
 
 # Se puso este diccionario mientras se soluciona lo de sacar el diccionario de planta 1
 """valores_recibir = {
@@ -29,7 +41,7 @@ import time
 """
 
 # Se establece la conexion
-ser = serial.Serial('COM5', 9600, timeout=1)
+ser = serial.Serial(arduino, 9600, timeout=1)
 time.sleep(1)
 
 
@@ -39,12 +51,16 @@ def getArduino():
     time.sleep(1)
     data = data.strip()
     data = data.split(',')
+    print "recibiendo de arduino: "
     print data
-    if len(data) == 7:
-
-        datosDic = {"s_luz_blanca_sise": data[0], "s_ph_sise": data[1], "s_luz_infrarroja_sise": data[2],
+    # Orden
+    # modo_manual, valvula, motobomba, humedad_suelo, ph, infrarroja, uv, blanca
+    if len(data) == 9:
+        print "verdadero"
+        datosDic = {"s_luz_blanca_sise": data[7], "s_ph_sise": data[4], "s_luz_infrarroja_sise": data[5],
                     "s_humedad_suelo_sise": data[3], "s_luz_uv_sise": data[4]}
     else:
+        print "falso"
         datosDic = None
         # return datosDic
 
@@ -56,6 +72,7 @@ def sendArduino(valores_recibir):
     aString = ','.join(map(str, aList))
     aString = aString + ','
     ser.write(aString.encode('ascii'))
+    print "enviando a arduino: "
     print aString
     time.sleep(1)
 

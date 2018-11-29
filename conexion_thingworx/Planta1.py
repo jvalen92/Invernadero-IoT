@@ -212,7 +212,7 @@ def main():
 
     # Enviar al servidor todos los datos
     setAllServerData(valores_enviar)
-    #printAllData()
+    # printAllData()
 
 
 
