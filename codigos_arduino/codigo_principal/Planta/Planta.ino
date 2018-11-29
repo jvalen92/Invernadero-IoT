@@ -67,6 +67,7 @@ float luzBlanca = 0,  //Luz blanca (luz visible)
 
 unsigned int hrs = 0; //Variable para almacenar las horas (HOUR) del reloj de tiempo real
 bool outputValve = 0;  //true = irrigación, false = goteo
+bool motobomba = 0; //Para saber si se prende o se apaga la motobomba
 
 //Variables para media movil y control PID
 double spLuz = 600,
@@ -376,6 +377,7 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
   spLuzIR = valoresRasp[4];
   spHumedadSuelo = valoresRasp[2];
   outputValve = valoresRasp[0];
+  motobomba = valoresRasp[1];
 
   if (outputValve == 1) {
     digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
