@@ -1,7 +1,7 @@
 # Invernadero-IoT
 Invernadero auntomatizado a pequeña escala elaborado por el Semillero de Investigación en Sistemas Embebidos (SISE) de la universidad EAFIT en la ciudad de Medellin, Colombia
 
-Convenciones:
+## Convenciones:
 
 Se usará la notación Camello para el código de arduino: nombres de variables iniciando con letras y en minúsculas y palabras compuestas con mayúscula inicial para cada palabra excepto la primera, ejemplo: humedadSuelo. Constantes en mayúsculas; si es una palabra compuesta se separa por raya al piso (_).
 
