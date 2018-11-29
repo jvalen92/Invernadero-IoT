@@ -25,8 +25,9 @@
 
 #define LM35 3  //Sensor de temperatura del suelo
 
-#define WVALVE 4  //Electrovalvula para irrigacion FALTA POR IMPLEMENTAR, true = irrigación, false = goteo
-
+#define WVALVEIRRIGACION 4  //Electrovalvula para irrigacion 
+#define WVALVEGOTEO 5  //Electrovalvula para goteo 
+#define MOTOPIN 6 //La motobomba :)
 #define UVLED 18 // FALTA POR IMPLEMENTAR
 #define IRLED 5  //LEDs infrarojos en pin 5
 #define PLED 6  //LEDs blancos de potencia
@@ -65,7 +66,7 @@ float luzBlanca = 0,  //Luz blanca (luz visible)
       spHumedadSuelo = 50;  //Set-point (Valor deseado) de humedad del suelo (valor por defeto en 50%)
 
 unsigned int hrs = 0; //Variable para almacenar las horas (HOUR) del reloj de tiempo real
-
+bool outputValve = true;  //true = irrigación, false = goteo
 
 //Variables para media movil y control PID
 double spLuz = 600,
@@ -304,16 +305,28 @@ void lightctrl() {  //Light controller subroutine
 
 void shumidctrl() { //Soil Humidity Controller
   errorHumedadSuelo = spHumedadSuelo - humedadSuelo;
-  if (errorHumedadSuelo < -2) {  //If the soil moisture is above set point (neg error), turn off water valve
-    digitalWrite(WVALVE, LOW);
+  if (errorHumedadSuelo < -2) {  //If the soil moisture is above set point (neg error), turn off all valves
+    digitalWrite(MOTOPIN, LOW);
+    digitalWrite(WVALVEGOTEO, LOW);
+    digitalWrite(WVALVEIRRIGACION, LOW);
+    
     estadoValvula = 0;
   }
   else if (errorHumedadSuelo > 2) { //else if the soil moisture is below set point (pos error), turn on water valve
-    digitalWrite(WVALVE, HIGH);
+    if(outputValve){
+      digitalWrite(WVALVEGOTEO, LOW);
+      digitalWrite(WVALVEIRRIGACION, HIGH);
+    }else{
+      digitalWrite(WVALVEGOTEO, HIGH);
+      digitalWrite(WVALVEIRRIGACION, LOW);
+    }
+    digitalWrite(MOTOPIN, HIGH);
     estadoValvula = 1;
   }
   else { //if the error is between -10% and 10%, keep the water valve off
-    digitalWrite(WVALVE, LOW);
+    digitalWrite(MOTOPIN, LOW);
+    digitalWrite(WVALVEGOTEO, LOW);
+    digitalWrite(WVALVEIRRIGACION, LOW);
     estadoValvula = 0;
   }
 }
@@ -354,12 +367,15 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
   //Aqui va la parte de modificar las variables de los actuadores necesarios.
 }
 
+
 void setup() {
   //Pin configuration
-  pinMode(WVALVE, OUTPUT);
+  pinMode(WVALVEIRRIGACION, OUTPUT);
+  pinMode(WVALVEGOTEO, OUTPUT);
   pinMode(PLED, OUTPUT);
   pinMode(IRLED, OUTPUT);
   pinMode(UVLED, OUTPUT);
+  pinmode(MOTOPIN, OUTPUT);
 
   //luzSalida cleaning
   digitalWrite(WVALVE, LOW);
