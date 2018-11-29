@@ -54,11 +54,11 @@ def getArduino():
     print "recibiendo de arduino: "
     print data
     # Orden
-    # modo_manual, valvula, motobomba, humedad_suelo, ph, infrarroja, uv, blanca
-    if len(data) == 9:
+    # luzBlanca, ph, luzInfrarroja, humedad_suelo, luz ultravioleta, temperatura_suelo
+    if len(data) == 7:
         print "verdadero"
-        datosDic = {"s_luz_blanca_sise": data[7], "s_ph_sise": data[4], "s_luz_infrarroja_sise": data[5],
-                    "s_humedad_suelo_sise": data[3], "s_luz_uv_sise": data[4]}
+        datosDic = {"s_luz_blanca_sise": data[0], "s_ph_sise": data[1], "s_luz_infrarroja_sise": data[2],
+                    "s_humedad_suelo_sise": data[3], "s_luz_uv_sise": data[4], "s_temperatura_suelo_sise": data[5]}
     else:
         print "falso"
         datosDic = None
@@ -73,6 +73,8 @@ def sendArduino(valores_recibir):
     aString = aString + ','
     ser.write(aString.encode('ascii'))
     print "enviando a arduino: "
+    # Orden
+    # modo_manual, valvula, motobomba, humedad_suelo, ph, infrarroja, uv, blanca
     print aString
     time.sleep(1)
 
