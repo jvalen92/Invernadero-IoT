@@ -1,1 +1,0 @@
-Los ejemplos de prueba y envio de datos a thingworx requieren las librerias requests y json (se usó simplejson). Los datos necesarios están en datos_conexion.txt (Pueden variar, el objeto PruebaPlant1_sise es solo para pruebas, por tanto no esta completo)
