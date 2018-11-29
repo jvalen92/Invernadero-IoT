@@ -35,8 +35,8 @@
 
 //Definición de constantes
 const unsigned long TSAMR = 3000; //Periodo de muestreo para almacenar variables
-const float SOIL_MADC_AIR = 520; //Valor ADC en el aire para calibrar el sensor de humedad del suelo
-const float SOIL_MADC_WATER = 286; //Valor ADC en el agua para calibrar el sensor de humedad del suelo
+const float SOIL_MADC_AIR = 0; //Valor ADC en el aire para calibrar el sensor de humedad del suelo
+const float SOIL_MADC_WATER = 700; //Valor ADC en el agua para calibrar el sensor de humedad del suelo
 const float SOIL_MO_AIR = 0; //Valor minimo (seco o al aire) deseado escalado de humedad del suelo (0%)
 const float SOIL_MO_WATER = 100;  //Valor maximo (humedo) deseado esacalado de humedad del suelo (100%)
 double CONSKP = 0.02, CONSKI = 1, CONSKD = 0.00001; //Constantes proporcional, integral y derivativa para el PID de iluminacion
@@ -224,13 +224,10 @@ void leerSensores() { //Read sensors information and store it in variables
   phEntrada = smoothPH(PH, totalPH, lecturaPh, indicePh);
   tiempoRelativo = tiempoActual - tiempoInicial;
   if (tiempoRelativo >= TSAMR) {
-    //luzEntrada = analogRead(LDR);
-    //luzUltravioleta = SI1145.ReadUV() / 100.0; //Para que tome nuevamente los valores de UV IR
     luzUltravioleta = luzUvEntrada;
     luzInfrarroja = luzInfrarrojaEntrada;
     luzBlanca  = luzEntrada * 5.0 / 1023.0;  //Convierto a voltios la iluminacion blanca
     luzBlanca  = 13.788 * exp(1.3413 *   luzBlanca ); //Convierto o proceso la iluminacion en lumens
-    //m = constrain(humedadSueloEntrada * 100.0 / 845.0, 0, 100);
     humedadSuelo = flmap(humedadSueloEntrada, SOIL_MADC_AIR, SOIL_MADC_WATER, SOIL_MO_AIR, SOIL_MO_WATER);
     //m = (float)((((humedadSueloEntrada - vtmin) * (mmax - mmin)) / (vtmax - vtmin)) + mmin);
     humedadSuelo = constrain(humedadSuelo, 0, 100);
@@ -242,19 +239,17 @@ void leerSensores() { //Read sensors information and store it in variables
     clock.getTime();
 
     String datalog = "";
-    datalog += String(luzBlanca, 4);
-    datalog += ",";
-    datalog += String(ph, 4);
-    datalog += ",";
-    datalog += String(luzInfrarroja, 4);
-    datalog += ",";
+        datalog += String(luzBlanca, 4);
+        datalog += ",";
+        datalog += String(ph, 4);
+        datalog += ",";
+        datalog += String(luzInfrarroja, 4);
+        datalog += ",";
     datalog += String(humedadSuelo, 4);
-    datalog += ",";
-    datalog += String(luzUltravioleta, 4);
-    datalog += ",";
-    datalog += String(temperaturaSuelo, 4);
-    datalog += ",";
-    datalog += String(estadoValvula, DEC);
+        datalog += ",";
+        datalog += String(luzUltravioleta, 4);
+        datalog += ",";
+        datalog += String(temperaturaSuelo, 4);
     Serial.println(datalog);
 
 
