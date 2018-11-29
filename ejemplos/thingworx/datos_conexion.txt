@@ -1,0 +1,24 @@
+Server Url:
+http://iot.dis.eafit.edu.co
+
+AppKey:
+d13445f2-6c11-46f9-9352-efdedf394208
+
+Things Names:
+Cuando los tengamos
+
+
+Properties Name:
+Plant
+ph_sise
+humedad_suelo_sise
+luz_solar_sise
+
+Central
+co2_sise
+temperatura_sise
+nivel_agua_sise
+humedad_sise
+
+Services:
+No los tenemos aun. Se usan con post.
