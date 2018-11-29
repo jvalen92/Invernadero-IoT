@@ -25,9 +25,9 @@
 
 #define LM35 3  //Sensor de temperatura del suelo
 
-#define WVALVEIRRIGACION 4  //Electrovalvula para irrigacion 
-#define WVALVEGOTEO 5  //Electrovalvula para goteo 
-#define MOTOPIN 6 //La motobomba 
+#define WVALVEIRRIGACION 7  //Electrovalvula para irrigacion 
+#define WVALVEGOTEO 8  //Electrovalvula para goteo 
+#define MOTOPIN 9 //La motobomba 
 #define UVLED 13 // FALTA POR IMPLEMENTAR
 #define IRLED 12  //LEDs infrarojos en pin 5
 #define PLED 11  //LEDs blancos de potencia
@@ -313,7 +313,7 @@ void shumidctrl() { //Soil Humidity Controller
 
     estadoValvula = 0;
   }
-  else if (errorHumedadSuelo > 2) { //else if the soil moisture is below set point (pos error), turn on water valve
+  else if (errorHumedadSuelo > 2 ) { //else if the soil moisture is below set point (pos error), turn on water valve
     if (outputValve) {
       digitalWrite(WVALVEGOTEO, LOW);
       digitalWrite(WVALVEIRRIGACION, HIGH);
@@ -378,13 +378,6 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
   spHumedadSuelo = valoresRasp[2];
   outputValve = valoresRasp[0];
   motobomba = valoresRasp[1];
-
-  if (outputValve == 1) {
-    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(1000);                       // wait for a second
-    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-    delay(1000);
-  }
   //Aqui va la parte de modificar las variables de los actuadores necesarios.
 }
 
