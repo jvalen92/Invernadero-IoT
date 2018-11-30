@@ -17,7 +17,7 @@
 #include "SI114X.h" //Libreria del Sunlight Sensor (uv,  luzInfrarrojay Visible SEEED Studio Groove)
 
 //Definicón de pines
-#define LDR 0 //Fotocelda para control de iluminacion visible blanca
+#define LDR A0 //Fotocelda para control de iluminacion visible blanca
 
 #define SOIL 1  //Sensor de humedad de la tierra
 
@@ -28,7 +28,7 @@
 #define VALVULA_IRRIGACION 7  //Electrovalvula para irrigacion 
 #define VALVULA_GOTEO 8  //Electrovalvula para goteo 
 #define MOTOPIN 9 //La motobomba 
-#define UVLED 13 // FALTA POR IMPLEMENTAR
+#define UVLED 13 //LEDS Uv
 #define IRLED 12  //LEDs infrarojos en pin 5
 #define PLED 11  //LEDs blancos de potencia
 
@@ -82,18 +82,20 @@ double spLuz = 600,
        phEntrada = 0,
        luzInfrarrojaEntrada = 0,
        luzUvEntrada = 0,
+       UvEntradaMap = 0,
        luzSalida = 0,
        luzInfrarrojaSalida = 0,
+       luzInfrarrojaMap = 0,
        luzUvSalida = 0;
 
 
 //Variables para media movil
 int lecturaLuz[NUMREADS] = {0},
-                           lecturaHumedadSuelo[NUMREADS] = {0},
-                               lecturaTemperatura[NUMREADS] = {0},
-                                   lecturaPh[NUMREADS] = {0},
-                                       lecturaInfrarroja[NUMREADS] = {0},
-                                           lecturaUv[NUMREADS] = {0};
+    lecturaHumedadSuelo[NUMREADS] = {0},
+    lecturaTemperatura[NUMREADS] = {0},
+    lecturaPh[NUMREADS] = {0},
+    lecturaInfrarroja[NUMREADS] = {0},
+    lecturaUv[NUMREADS] = {0};
 
 int indiceLuz = 0,
     indiceHumedadSuelo = 0,
@@ -121,10 +123,9 @@ unsigned long tiempoRelativoPh = 0;  //Tiempo relativo de muestreo del sensor pH
 //Definiciones e inicializaciones para librerías
 PID PIDBlanca(&luzEntrada, &luzSalida, &spLuz, CONSKP, CONSKI, CONSKD, DIRECT);
 PID PIDIR(&luzInfrarrojaEntrada, &luzInfrarrojaSalida, &spIR, CONSKP, CONSKI, CONSKD, DIRECT);
-PID PIDUV(&luzUvEntrada, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT);
+PID PIDUV(&UvEntradaMap, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT);
 DS1307 clock;//Objeto para el uso de los métodos del RTC
 SI114X SI1145 = SI114X(); //Objeto para el sensor de luz
-
 
 
 //Métodos y subrutinas
@@ -220,7 +221,11 @@ unsigned long smoothUV(long &total, int *readings, int &readIndex) {
 void leerSensores() { //Read sensors information and store it in variables
   luzEntrada = smooth(LDR, totalLuz, lecturaLuz, indiceLuz);
   luzInfrarrojaEntrada = smoothIR(totalIR, lecturaInfrarroja, indiceInfrarroja);
+  luzInfrarrojaEntrada = constrain(luzInfrarrojaEntrada, 0 , 1023);
+  //luzInfrarrojaMap = flmap(luzInfrarrojaEntrada, 0, 1020, 0, 1023);
   luzUvEntrada = smoothUV(totalUv, lecturaUv, indiceUv);
+  luzUvEntrada = constrain(luzUvEntrada,0, 300);
+  UvEntradaMap = flmap(luzUvEntrada, 0, 300, 0, 1023);
   humedadSueloEntrada = smooth(SOIL, totalHumedadSuelo, lecturaHumedadSuelo, indiceHumedadSuelo);
   temperaturaEntrada = smooth(LM35, totalTemperatura, lecturaTemperatura, indiceTemperatura);
   phEntrada = smoothPH(PH, totalPH, lecturaPh, indicePh);
@@ -236,9 +241,9 @@ void leerSensores() { //Read sensors information and store it in variables
     //m = analogRead(SOIL);
     temperaturaSuelo = temperaturaEntrada * 500.0 / 1023.0;
     ph = phEntrada * 5.0 * 3.5 / 1023.0 + OFFSET;
-    //printsens();
+    printsens();
     //RTC get time
-    clock.getTime();
+    //clock.getTime();
 
     String datalog = "";
     datalog += String(luzBlanca, 4);
@@ -252,7 +257,7 @@ void leerSensores() { //Read sensors information and store it in variables
     datalog += String(luzUltravioleta, 4);
     datalog += ",";
     datalog += String(temperaturaSuelo, 4);
-    Serial.println(datalog);
+    //Serial.println(datalog);
 
 
     tiempoInicial = millis();
@@ -260,37 +265,42 @@ void leerSensores() { //Read sensors information and store it in variables
 }
 
 void printsens() { //Prints sensors information on Serial monitor
-  Serial.print(clock.hour, DEC);
-  Serial.print(':');
-  Serial.print(clock.minute, DEC);
-  Serial.print(':');
-  Serial.print(clock.second, DEC);
-  Serial.print(' ');
-  Serial.print(clock.dayOfMonth, DEC);
-  Serial.print('/');
-  Serial.print(clock.month, DEC);
-  Serial.print('/');
-  Serial.print(clock.year, DEC);
-  Serial.print(" Luminous flux: ");
+//  Serial.print(clock.hour, DEC);
+//  Serial.print(':');
+//  Serial.print(clock.minute, DEC);
+//  Serial.print(':');
+//  Serial.print(clock.second, DEC);
+//  Serial.print(' ');
+//  Serial.print(clock.dayOfMonth, DEC);
+//  Serial.print('/');
+//  Serial.print(clock.month, DEC);
+//  Serial.print('/');
+//  Serial.print(clock.year, DEC);
+  Serial.print("Luminous flux: ");
   Serial.print(luzBlanca);
   Serial.print(" *C luzInfrarroja Sensor: ");
   Serial.print(luzInfrarroja);
+  Serial.print(" IR: ");
+  Serial.print(luzInfrarrojaSalida);
   Serial.print(" lux luzUltravioleta Sensor: ");
   Serial.print(luzUltravioleta);
-  Serial.print(" lux Soil Moisture: ");
-  Serial.print(humedadSuelo);
-  Serial.print(" % Valve: ");
-  Serial.print(motobomba);
-  Serial.print(" Soil Temperature: ");
-  Serial.print(temperaturaSuelo);
-  Serial.print(" ph Sensor: ");
-  Serial.println(ph);
+  Serial.print(" UV: ");
+  Serial.print(luzUvSalida);
+//  Serial.print(" lux Soil Moisture: ");
+//  Serial.print(humedadSuelo);
+//  Serial.print(" % Valve: ");
+//  Serial.print(motobomba);
+//  Serial.print(" Soil Temperature: ");
+//  Serial.print(temperaturaSuelo);
+//  Serial.print(" ph Sensor: ");
+//  Serial.println(ph);
+Serial.println();
 }
 
 void lightctrl() {  //Light controller subroutine
   spLuz = constrain(151.04 * log(spLuzBlanca) - 390.08, 0, 1023); //Pasa de lumens a valores analogos
-  spIR = constrain(151.04 * log(spLuzIR) - 390.08, 0, 1023);
-  spUv = constrain(151.04 * log(spLuzUv) - 390.08, 0, 1023);
+  spIR = constrain(spLuzIR, 0, 1023);
+  spUv = constrain(spLuzUv, 0, 1023);
   PIDBlanca.Compute(); //Calcula que tanto se debe prender la luz blanca
   PIDIR.Compute(); //Calcula que tanto se debe prender la luz IR
   PIDUV.Compute(); //Calcula que tanto se debe prender la luz UV
