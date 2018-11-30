@@ -11,57 +11,57 @@
 //Definción de librerías
 #include "DHT.h"
 #include <PID_v1.h> //Libreria de PID para control de iluminacion
-#include <Wire.h> //Libreria para comunicarse DS1307 reloj de tiempo real
+#include <Wire.h>   //Libreria para comunicarse DS1307 reloj de tiempo real
 #include "DS1307.h" //Libreria del reloj de tiempo real (RTC)
 
 //Definición de pines
-#define SPCMAX 10 //Setpoint de corriente de temperatura para el maxthermo
-#define nivelCo2SEN 2  //Sensor de nivelCo2
+#define SPCMAX 10     //Setpoint de corriente de temperatura para el maxthermo
+#define nivelCo2SEN 2 //Sensor de nivelCo2
 
-#define WCS1800C 6 //Current sensor for central on A6 ?
-#define WCS1800P2 0//Current sensor for plant 2 on A0 ?
+#define WCS1800C 6  //Current sensor for central on A6 ?
+#define WCS1800P2 0 //Current sensor for plant 2 on A0 ?
 #define WCS1800P1 7 //Current sensor for plant 1 on A7 ?
 
-#define DHTPIN 9  //Sensor de temperatura y humedad
+#define DHTPIN 9 //Sensor de temperatura y humedad
 
 #define ENCVENTILADOR_ENTRADA 18 //Hall sensor for Fan In on digital pin D3 ?
-#define ENCVENTILADOR_SALIDA 19 //Hall sensor for Fan Out on digital pin D18 ?
+#define ENCVENTILADOR_SALIDA 19  //Hall sensor for Fan Out on digital pin D18 ?
 
 #define VENTILADOR_ENTRADA 5
 #define VENTILADOR_SALIDA 4
 
-#define WLECHO 6  //Echo para ultrasonido utilizado para medir el nivel del agua
-#define WLTRIG 7 //Trigger para ultrasonido utilizado para medir el nivel del agua
-#define TEMP_AGUA 3  //Temperatura del agua
+#define WLECHO 6    //Echo para ultrasonido utilizado para medir el nivel del agua
+#define WLTRIG 7    //Trigger para ultrasonido utilizado para medir el nivel del agua
+#define TEMP_AGUA 3 //Temperatura del agua
 
 #define WTOUT 31 //Water resistor SSR out ?
 
 #define WLINVALVE 26 //Water level in valve in pin D26 ?
 
 //Variables para las librerias y definción de constantes
-#define DHTTYPE DHT11   // DHT 11
+#define DHTTYPE DHT11 // DHT 11
 //#define DHTTYPE DHT22   // DHT 22  (AM2302)
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
 DHT dht(DHTPIN, DHTTYPE);
-DS1307 clock;//Definición para el reloj
+DS1307 clock; //Definición para el reloj
 
 //Definición de constantes
-const float DC_GAIN = 8.5;  //define the DC gain of amplifier nivelCo2 sensor
+const float DC_GAIN = 8.5; //define the DC gain of amplifier nivelCo2 sensor
 //const float ZERO_POINT_VOLTAGE = 0.4329; //define the output of the sensor in volts when the concentration of nivelCo2 is 400PPM
 const float ZERO_POINT_VOLTAGE = 0.265; //define the output of the sensor in volts when the concentration of nivelCo2 is 400PPM
 const float REACTION_VOLTAGE = 0.059;   //define the “voltage drop” of the sensor when move the sensor from air into 1000ppm nivelCo2
-const unsigned long tsamr = 3000; //Sampling time 3 secs for reading
-const float wtadc_min = 50; //Minimum ADC for temperature
-const float wtadc_max = 920; //Maximum ADC for temperature
-const float wto_min = 20; //Minimum temperature
-const float wto_max = 35;  //Maximum temperature
-const float nivelAguai_min = 20; //Minimum water level
-const float nivelAguai_max = 41; //Maximum water level
-const float nivelAguao_min = 0; //Minimum water level
-const float nivelAguao_max = 25; //Maximum water level
+const unsigned long tsamr = 3000;       //Sampling time 3 secs for reading
+const float wtadc_min = 50;             //Minimum ADC for temperature
+const float wtadc_max = 920;            //Maximum ADC for temperature
+const float wto_min = 20;               //Minimum temperature
+const float wto_max = 35;               //Maximum temperature
+const float nivelAguai_min = 20;        //Minimum water level
+const float nivelAguai_max = 41;        //Maximum water level
+const float nivelAguao_min = 0;         //Minimum water level
+const float nivelAguao_max = 25;        //Maximum water level
 const int numReadings = 40;
 const int numReadingsnivelCo2 = 5;
-
+const int TOTAL_VALORES_RASP = 5;
 
 /*
   Nombre     Pin Arduino
@@ -72,30 +72,32 @@ const int numReadingsnivelCo2 = 5;
   Gnd -       0v
   Out -       Salida
 */
-const byte CS    = 2;
+const byte CS = 2;
 const byte CLOCK = 3;
-const byte DATA  = 4;
+const byte DATA = 4;
 const byte HALF_CLOCK_PERIOD = 2; //2 uS of clock period
-
-
 
 //Definición de variables
 float nivelCo2Curve[3] = {2.602, ZERO_POINT_VOLTAGE, (REACTION_VOLTAGE / (2.602 - 3))}; //Line curve with 2 points
-int nivelCo2 = 0; //Define co2 as int for nivelCo2 concentration in ppm
-float nivelAgua = 0;  //Define nivelAgua as float for water level in cm
-float t = 25;  //Define t as float for ambient temperature in °C
-float tp = 25;  //Define tp as float for previous ambient temperature in °C
-float wt = 0; //Define wt as float for water temperature in °C
-float h = 30;  //Define h as float for humidity in %
-float hp = 30;  //Define hp as float for previous humidity in %
-float enivelAgua = 0; //Define enivelAgua as float for water level error
-float IC = 0; //Define IC as float for Central current in Amps
-float IP1 = 0;  //Define IP1 as float for Plant 1 current in Amps
-float IP2 = 0;  //Define IP2 as float for Plant 2 current in Amps
-int enivelCo2 = 0; //Define et as int for nivelCo2 concentration error
+int nivelCo2 = 0;                                                                       //Define co2 as int for nivelCo2 concentration in ppm
+float nivelAgua = 0;                                                                    //Define nivelAgua as float for water level in cm
+float t = 25;                                                                           //Define t as float for ambient temperature in °C
+float tp = 25;                                                                          //Define tp as float for previous ambient temperature in °C
+float wt = 0;                                                                           //Define wt as float for water temperature in °C
+float h = 30;                                                                           //Define h as float for humidity in %
+float hp = 30;                                                                          //Define hp as float for previous humidity in %
+float IC = 0;                                                                           //Define IC as float for Central current in Amps
+float IP1 = 0;                                                                          //Define IP1 as float for Plant 1 current in Amps
+float IP2 = 0;                                                                          //Define IP2 as float for Plant 2 current in Amps
+int enivelCo2 = 0;                                                                      //Define et as int for nivelCo2 concentration error
+float valoresRasp[TOTAL_VALORES_RASP] = {0};                                            //Arreglo que guardara los valores recibidos desde la raspberry
+
+//Variables para control
+bool entradaAire = false;
+bool salidaAire = false;
+unsigned int modoManual = 0;
 
 //Set points (valores deseados)
-float spNivelAgua = 0;
 float spTempAgua = 30;
 int spNivelCo2 = 600;
 
@@ -107,13 +109,13 @@ int readingsnivelCo2[numReadingsnivelCo2] = {0}, readingsnivelAgua[numReadings] 
 
 int readIndexnivelCo2 = 0,
     readIndexnivelAgua = 0,
-    readIndext = 0, 
+    readIndext = 0,
     readIndexwt = 0,
     readIndexh = 0,
     readIndexIC = 0,
     readIndexIP1 = 0,
     readIndexIP2 = 0;
-    
+
 long totalnivelCo2 = 0, totalnivelAgua = 0, totalt = 0, totalwt = 0, totalh = 0, totalIC = 0, totalIP1 = 0, totalIP2 = 0;
 char readbuffer[5] = {'\0'};
 
@@ -135,14 +137,17 @@ float flmap(float x, float in_min, float in_max, float out_min, float out_max)
   return constrain((float)((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min), out_min, out_max);
 }
 
-unsigned int smooth(int meas, long &total, int *readings, int &readIndex, char type) {
+unsigned int smooth(int meas, long &total, int *readings, int &readIndex, char type)
+{
   // subtract the last reading
   total = total - readings[readIndex];
   // read from the sensor:
-  if (type == 'A') {
+  if (type == 'A')
+  {
     readings[readIndex] = analogRead(meas);
   }
-  else if (type == 'M') {
+  else if (type == 'M')
+  {
     readings[readIndex] = meas;
   }
   // add the reading to the total:
@@ -151,7 +156,8 @@ unsigned int smooth(int meas, long &total, int *readings, int &readIndex, char t
   readIndex = readIndex + 1;
 
   // if we're at the end of the array...
-  if (readIndex >= numReadings) {
+  if (readIndex >= numReadings)
+  {
     // ...wrap around to the beginning:
     readIndex = 0;
   }
@@ -160,10 +166,12 @@ unsigned int smooth(int meas, long &total, int *readings, int &readIndex, char t
   return total / numReadings;
 }
 
-unsigned int smoothnivelCo2(int pin, long &tot, int *reads, int &readInd) {
+unsigned int smoothnivelCo2(int pin, long &tot, int *reads, int &readInd)
+{
   // subtract the last reading
   tiempoRelativoNivelCo2 = tiempoActual - tiempoInicialNivelCo2;
-  if (tiempoRelativoNivelCo2 >= 20) {
+  if (tiempoRelativoNivelCo2 >= 20)
+  {
     tot = tot - reads[readInd];
     // read from the sensor:
     reads[readInd] = analogRead(pin);
@@ -173,7 +181,8 @@ unsigned int smoothnivelCo2(int pin, long &tot, int *reads, int &readInd) {
     readInd = readInd + 1;
 
     // if we're at the end of the array...
-    if (readInd >= numReadingsnivelCo2) {
+    if (readInd >= numReadingsnivelCo2)
+    {
       // ...wrap around to the beginning:
       readInd = 0;
     }
@@ -182,10 +191,12 @@ unsigned int smoothnivelCo2(int pin, long &tot, int *reads, int &readInd) {
   // calculate the average:
   return tot / numReadingsnivelCo2;
 }
-//Sensor ultrasonido 
-float sultra(byte echop, byte trigp) {
+//Sensor ultrasonido
+float sultra(byte echop, byte trigp)
+{
   tiempoRelativoNivelAgua = tiempoActual - tiempoInicialNivelAgua;
-  if (tiempoRelativoNivelAgua >= 50) {
+  if (tiempoRelativoNivelAgua >= 50)
+  {
     digitalWrite(trigp, HIGH);
     delayMicroseconds(10);
     digitalWrite(trigp, LOW);
@@ -195,19 +206,21 @@ float sultra(byte echop, byte trigp) {
   return InputiempoRelativoNivelAgua;
 }
 
-
-
-int readnivelCo2(double ADCnivelCo2, float *pcurve) {
-  float volts = ADCnivelCo2 * 5.0 / 1023.0;  //Convert nivelCo2 ADC to volts
-  if ((volts / DC_GAIN) >= ZERO_POINT_VOLTAGE) {
+int readnivelCo2(double ADCnivelCo2, float *pcurve)
+{
+  float volts = ADCnivelCo2 * 5.0 / 1023.0; //Convert nivelCo2 ADC to volts
+  if ((volts / DC_GAIN) >= ZERO_POINT_VOLTAGE)
+  {
     return -1;
   }
-  else {
+  else
+  {
     return pow(10, ((volts / DC_GAIN) - pcurve[1]) / pcurve[2] + pcurve[0]);
   }
 }
 
-void readsens() { //Read sensors information and store it in variables
+void readsens()
+{ //Read sensors information and store it in variables
   InputiempoRelativoNivelCo2 = smoothnivelCo2(nivelCo2SEN, totalnivelCo2, readingsnivelCo2, readIndexnivelCo2);
   //InputiempoRelativoNivelAgua = smooth(sultra(WLECHO, WLTRIG), totalnivelAgua, readingsnivelAgua, readIndexnivelAgua, 'M');
   InputiempoRelativoNivelAgua = sultra(WLECHO, WLTRIG);
@@ -217,11 +230,14 @@ void readsens() { //Read sensors information and store it in variables
   InputIP1 = smooth(WCS1800P1, totalIP1, readingsIP1, readIndexIP1, 'A');
   InputIP2 = smooth(WCS1800P2, totalIP2, readingsIP2, readIndexIP2, 'A');
   tiempoRelativo = tiempoActual - tiempoInicial;
-  if (tiempoRelativo >= tsamr) {
-    if (digitalRead(WTOUT) == HIGH) {
+  if (tiempoRelativo >= tsamr)
+  {
+    if (digitalRead(WTOUT) == HIGH)
+    {
       WTOUTSTATE = 1;
     }
-    else {
+    else
+    {
       WTOUTSTATE = 0;
     }
     nivelCo2 = constrain(readnivelCo2(InputiempoRelativoNivelCo2, nivelCo2Curve), 400, 10000);
@@ -234,14 +250,17 @@ void readsens() { //Read sensors information and store it in variables
     IP2 = constrain(0.088 * InputIP2 - 44.972, 0, 30);
 
     // check if returns are valid, if they are NaN (not a number) then something went wrong!
-    if (isnan(t)) {
+    if (isnan(t))
+    {
       t = tp;
       //Serial.println("Failed to read from DHT");
     }
-    else if (isnan(h)) {
+    else if (isnan(h))
+    {
       h = hp;
     }
-    else {
+    else
+    {
       tp = t;
       hp = h;
     }
@@ -249,50 +268,25 @@ void readsens() { //Read sensors information and store it in variables
     //RTC get time
     clock.getTime();
 
-    //SD Logging
-    String datalog = ""; //Define datalog as string for storing data in SD as text
-    datalog += String(clock.hour, DEC);
-    datalog += ":";
-    datalog += String(clock.minute, DEC);
-    datalog += ":";
-    datalog += String(clock.second, DEC);
-    datalog += ",";
-    datalog += String(clock.dayOfMonth, DEC);
-    datalog += "/";
-    datalog += String(clock.month, DEC);
-    datalog += "/";
-    datalog += String(clock.year, DEC);
-    datalog += ",";
-    datalog += String(spNivelAgua, 4);
-    datalog += ",";
-    datalog += String(nivelAgua, 4);
-    datalog += ",";
-    datalog += String(WLINSTATE, DEC);
-    datalog += ",";
-    datalog += "30";
+    String datalog = ""; // Recoge las lecturas finales de los sensores y las envia por serial a la raspberry
+    datalog += String(nivelCo2, DEC);
     datalog += ",";
     datalog += String(wt, 4);
     datalog += ",";
-    datalog += String(WTOUTSTATE, DEC);
-    datalog += ",";
-    datalog += String(t, 4);
-    datalog += ",";
     datalog += String(h, 4);
     datalog += ",";
-    datalog += String(spNivelCo2, DEC);
+    datalog += String(nivelAgua, 4);
     datalog += ",";
-    datalog += String(nivelCo2, DEC);
-    datalog += ",";
-    datalog += String(IC, 4);
-    datalog += ",";
-    datalog += String(IP1, 4);
-    datalog += ",";
-    datalog += String(IP2, 4);
+    datalog += String(t, 4);
+
+    Serial.println(datalog);
+
     tiempoInicial = millis();
   }
 }
 
-void printsens() { //Prints sensors information on Serial monitor
+void printsens()
+{ //Prints sensors information on Serial monitor
   Serial.print(clock.hour, DEC);
   Serial.print(':');
   Serial.print(clock.minute, DEC);
@@ -329,38 +323,25 @@ void printsens() { //Prints sensors information on Serial monitor
   Serial.println(" A");
 }
 
-void nivelAguaevelctrl() { //Water Level Controller
-  enivelAgua = spNivelAgua - nivelAgua;
-  if (enivelAgua < -0.5) {  //If the water level error is less than -2 cm, turn off water 
-  
-    digitalWrite(WLINVALVE, LOW);
-    WLINSTATE = 0;
-  }
-  else if (enivelAgua > 0.5) { //else if the water level is greater than 4 cm, turn on water in valve
-    digitalWrite(WLINVALVE, HIGH);
-    WLINSTATE = 1;
-  }
-  else { //In other case, keep the water in valve off
-    digitalWrite(WLINVALVE, LOW);
-    WLINSTATE = 0;
-  }
-}
-
-void nivelCo2ctrl() { //nivelCo2 Controller
+void nivelCo2ctrl()
+{ //nivelCo2 Controller
   enivelCo2 = spNivelCo2 - nivelCo2;
-  if (enivelCo2 < -20) {  //If the nivelCo2 error is less than -100 ppm, turn off VENTILADOR_ENTRADA turn on VENTILADOR_SALIDA
+  if (enivelCo2 < -20)
+  { //If the nivelCo2 error is less than -100 ppm, turn off VENTILADOR_ENTRADA turn on VENTILADOR_SALIDA
     digitalWrite(VENTILADOR_ENTRADA, LOW);
     digitalWrite(VENTILADOR_SALIDA, HIGH);
     VENTILADOR_ENTRADASTATE = 0;
     VENTILADOR_SALIDASTATE = 1;
   }
-  else if (enivelCo2 > 100) { //else If the nivelCo2 error is greater than 100 ppm, turn on VENTILADOR_ENTRADA turn off VENTILADOR_SALIDA
+  else if (enivelCo2 > 100)
+  { //else If the nivelCo2 error is greater than 100 ppm, turn on VENTILADOR_ENTRADA turn off VENTILADOR_SALIDA
     digitalWrite(VENTILADOR_ENTRADA, HIGH);
     digitalWrite(VENTILADOR_SALIDA, LOW);
     VENTILADOR_ENTRADASTATE = 1;
     VENTILADOR_SALIDASTATE = 0;
   }
-  else { //In other case, keep the fans off
+  else
+  { //In other case, keep the fans off
     digitalWrite(VENTILADOR_ENTRADA, LOW);
     digitalWrite(VENTILADOR_SALIDA, LOW);
     VENTILADOR_ENTRADASTATE = 0;
@@ -368,9 +349,50 @@ void nivelCo2ctrl() { //nivelCo2 Controller
   }
 }
 
+void getValoresRasp()
+{ //Recibe los datos desde la raspberry y los asigna a las variables correspondientes
+  if (Serial.available())
+  {
+    String recibido = Serial.readString();
+    int r = 0;
+    int t = 0;
+    for (int i = 0; i < recibido.length(); i++)
+    {
+      if (recibido.charAt(i) == ',')
+      {
+        valoresRasp[t] = recibido.substring(r, i).toFloat();
+        r = (i + 1);
+        t++;
+      }
+    }
+  }
+  //Los siguientes condicionales son porque en la parte de control solo podemos garantizar un control hasta el 60 % del valor
+  if (valoresRasp[4] <= 6000)
+  {
+    spNivelCo2 = valoresRasp[4];
+  }
+  else
+  {
+    spNivelCo2 = 6000;
+  }
+  if (valoresRasp[1] <= 45)
+  {
+    spTempAgua = valoresRasp[1];
+  }
+  else
+  {
+    spTempAgua = 45;
+  }
 
-void MeasInitialize() {
-  for (unsigned int i = 0; i < 80; i++) {
+  modoManual = valoresRasp[2];
+  entradaAire = valoresRasp[0];
+  salidaAire = valoresRasp[3];
+}
+
+void MeasInitialize()
+{
+  for (unsigned int i = 0; i < 80; i++)
+  {
     constrain(readnivelCo2(InputiempoRelativoNivelCo2, nivelCo2Curve), 400, 10000);
     InputiempoRelativoNivelAgua = sultra(WLECHO, WLTRIG);
     Inputwt = smooth(TEMP_AGUA, totalwt, readingswt, readIndexwt, 'A');
@@ -388,23 +410,24 @@ void MeasInitialize() {
 
 void writeValue(uint16_t value)
 {
-  digitalWrite(CS, LOW);//start of 12 bit data sequence
+  digitalWrite(CS, LOW); //start of 12 bit data sequence
   digitalWrite(CLOCK, LOW);
   value = value << 2;
-  for (int i = 11; i >= 0; i--)//send the 12 bit sample data
+  for (int i = 11; i >= 0; i--) //send the 12 bit sample data
   {
-    digitalWrite(DATA, (value & (1 << i)) >> i);//DATA ready
+    digitalWrite(DATA, (value & (1 << i)) >> i); //DATA ready
     delayMicroseconds(HALF_CLOCK_PERIOD);
-    digitalWrite(CLOCK, HIGH);//DAC get DATA at positive edge
+    digitalWrite(CLOCK, HIGH); //DAC get DATA at positive edge
     delayMicroseconds(HALF_CLOCK_PERIOD);
     digitalWrite(CLOCK, LOW);
   }
-  digitalWrite(CS, HIGH);//end 12 bit data sequence
+  digitalWrite(CS, HIGH); //end 12 bit data sequence
 }
 
 //writeValue(700);//Valor de salida en voltaje
 
-void setup() {
+void setup()
+{
   //Configuración de pines
   pinMode(WLINVALVE, OUTPUT);
   pinMode(WLECHO, INPUT);
@@ -439,16 +462,17 @@ void setup() {
   clock.begin();
   dht.begin();
   MeasInitialize();
-  
+
   tiempoInicial = millis();
   tiempoInicialNivelCo2 = millis();
   tiempoInicialNivelAgua = millis();
 }
 
-void loop() {
+void loop()
+{
   tiempoActual = millis();
-  readsens(); //Read sensors
+  readsens();          //Read sensors
   nivelAguaevelctrl(); //Activate water level controller
-  nivelCo2ctrl(); //Activate temperature controller
+  nivelCo2ctrl();      //Activate temperature controller
   analogWrite(SPCMAX, 0);
 }

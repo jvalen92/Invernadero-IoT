@@ -124,7 +124,6 @@ unsigned long tiempoRelativoPh = 0;  //Tiempo relativo de muestreo del sensor pH
 PID PIDBlanca(&luzEntrada, &luzSalida, &spLuz, CONSKP, CONSKI, CONSKD, DIRECT);
 PID PIDIR(&luzInfrarrojaEntrada, &luzInfrarrojaSalida, &spIR, CONSKP, CONSKI, CONSKD, DIRECT);
 PID PIDUV(&UvEntradaMap, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT);
-DS1307 clock;//Objeto para el uso de los métodos del RTC
 SI114X SI1145 = SI114X(); //Objeto para el sensor de luz
 
 
@@ -241,10 +240,7 @@ void leerSensores() { //Read sensors information and store it in variables
     //m = analogRead(SOIL);
     temperaturaSuelo = temperaturaEntrada * 500.0 / 1023.0;
     ph = phEntrada * 5.0 * 3.5 / 1023.0 + OFFSET;
-    printsens();
-    //RTC get time
-    //clock.getTime();
-
+    
     String datalog = "";
     datalog += String(luzBlanca, 4);
     datalog += ",";
@@ -265,18 +261,7 @@ void leerSensores() { //Read sensors information and store it in variables
 }
 
 void printsens() { //Prints sensors information on Serial monitor
-//  Serial.print(clock.hour, DEC);
-//  Serial.print(':');
-//  Serial.print(clock.minute, DEC);
-//  Serial.print(':');
-//  Serial.print(clock.second, DEC);
-//  Serial.print(' ');
-//  Serial.print(clock.dayOfMonth, DEC);
-//  Serial.print('/');
-//  Serial.print(clock.month, DEC);
-//  Serial.print('/');
-//  Serial.print(clock.year, DEC);
-  Serial.print("Luminous flux: ");
+  Serial.print(" Luminous flux: ");
   Serial.print(luzBlanca);
   Serial.print(" *C luzInfrarroja Sensor: ");
   Serial.print(luzInfrarroja);
@@ -379,29 +364,28 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
   }
 
   //Los siguientes condicionales son porque en la parte de control solo podemos garantizar un control hasta el 60 % del valor
-  if (valoresRasp[7] <= 600) {
-    spLuzBlanca = valoresRasp[7];
+  if (valoresRasp[8] <= 600) {
+    spLuzBlanca = valoresRasp[8];
   } else {
     spLuzBlanca = 600;
   }
-  if (valoresRasp[6] <= 600) {
-    spLuzUv = valoresRasp[6];
+  if (valoresRasp[7] <= 600) {
+    spLuzUv = valoresRasp[7];
   } else {
     spLuzUv = 600;
   }
-  if (valoresRasp[5] <= 600) {
-    spLuzIR = valoresRasp[5];
+  if (valoresRasp[6] <= 600) {
+    spLuzIR = valoresRasp[6];
   } else {
     spLuzIR = 600;
   }
-
   if (valoresRasp[3] <= 60) {
     spHumedadSuelo = valoresRasp[3];
   } else {
     spHumedadSuelo = 60;
   }
-  estadoValvula = valoresRasp[1];
   motobomba = valoresRasp[2];
+  estadoValvula = valoresRasp[1];
   modoManual = valoresRasp[0];
   //Aqui va la parte de modificar las variables de los actuadores necesarios.
 }
@@ -454,7 +438,6 @@ void setup() {
   PIDBlanca.SetMode(AUTOMATIC);
   PIDIR.SetMode(AUTOMATIC);
   PIDUV.SetMode(AUTOMATIC);
-  clock.begin();
   while (!SI1145.Begin());
   MeasInitialize();
 

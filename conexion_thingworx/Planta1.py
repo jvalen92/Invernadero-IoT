@@ -3,7 +3,7 @@ import json
 import requests
 import time
 import datetime
-import serialRaspberry as ras
+import serialRaspberryPlanta as ras
 
 # Definiendo sistema operativo para la variable clear que sirve para limpiar la pantalla
 sos = os.name
@@ -40,7 +40,7 @@ claves_enviar = {
 }
 
 claves_recibir = {
-    "Plant_sise": ["a_humedad_suelo_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise", "a_electro_val_sise","a_motobomba_sise"],
+    "Plant_sise": ["a_humedad_suelo_sise", "a_luz_infrarroja_sise", "a_luz_uv_sise", "a_luz_blanca_sise", "a_electro_val_sise", "a_motobomba_sise"],
 }
 
 # Valores que se enviaran
@@ -51,8 +51,8 @@ valores_enviar = {
         "s_luz_blanca_sise": "0",
         "s_humedad_suelo_sise": "0",
         "s_ph_sise": "0",
-        
-        }
+
+    }
 
 }
 
@@ -63,9 +63,9 @@ valores_recibir = {
         "a_luz_uv_sise": "0",
         "a_luz_blanca_sise": "0",
         "a_motobomba_sise": "0",
-        "a_electro_val_sise":"0",
+        "a_electro_val_sise": "0",
 
-        }
+    }
 
 }
 
@@ -167,7 +167,7 @@ miObjeto = "planta1"
 
 
 def setValuesToThingworx(dic):
-   
+
     for valoruni in valores_enviar["planta1"]:
         if(valoruni[0] == 's'):
             setProperty(valoruni, str(dic[valoruni]))
@@ -176,45 +176,38 @@ def setValuesToThingworx(dic):
 def setArduinoData():
     ras.sendArduino(dics)
 
+
 def getArduinoData():
 
-    
     return ras.getArduino()
 
 
 def main():
-    
+
     getAllServerData(objetos)
     getAllServerData(valores_recibir)
-    
+
     setArduinoData()
 
-    gett=getArduinoData()
+    gett = getArduinoData()
 
-    if(gett!=None):
-
+    if(gett != None):
 
         now = datetime.datetime.now()
         print "\n"
         print now.strftime("%Y-%m-%d %H:%M")
 
-        for key,value in dics.iteritems():
+        for key, value in dics.iteritems():
             print key, " : ", dics[key]
 
-        for key,value in gett.iteritems():
+        for key, value in gett.iteritems():
             print key, " : ", gett[key]
-        
 
         setValuesToThingworx(gett)
-    
-
-    
 
     # Enviar al servidor todos los datos
     setAllServerData(valores_enviar)
     # printAllData()
-
-
 
 
 while(True):
