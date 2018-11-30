@@ -36,33 +36,29 @@ objetos = {"central": {}}
 # Valores oficiales
 
 claves_enviar = {
-    "Central_sise": ["s_co2_sise","s_temperatura_tanque_sise","s_humedad_sise", "s_nivel_agua_sise", "s_temperatura_sise"]
+    "Central_sise": ["s_co2_sise", "s_temperatura_tanque_sise", "s_humedad_sise", "s_nivel_agua_sise", "s_temperatura_sise"]
 }
 
 claves_recibir = {
-    "Central_sise": ["a_co2_sise","a_temperatura_tanque_sise"],
+    "Central_sise": ["a_co2_sise", "a_temperatura_tanque_sise"],
 }
 
 # Valores que se enviaran
 valores_enviar = {
     "central": {
-        "s_co2_sise":"0"
-        ,"s_temperatura_tanque_sise":"0"
-        ,"s_humedad_sise":"0"
-        , "s_nivel_agua_sise":"0"
-        , "s_temperatura_sise":"0"
-        
-        }
+        "s_co2_sise": "0", "s_temperatura_tanque_sise": "0", "s_humedad_sise": "0", "s_nivel_agua_sise": "0", "s_temperatura_sise": "0"
+
+    }
 
 }
 
 valores_recibir = {
     "central": {
-       "a_co2_sise":"0",
-        "a_temperatura_tanque_sise":"0",
-        "a_ventilardor_entrada_sise":"0"
+        "a_co2_sise": "0",
+        "a_temperatura_tanque_sise": "0",
+        "a_ventilardor_entrada_sise": "0"
 
-        }
+    }
 
 }
 
@@ -125,28 +121,28 @@ def printAllData():
 # Metodo que recibe los valores en el diccionario valores_recibidos
 
 
-def getAllServerData(valores_recibidos,option):
+def getAllServerData(valores_recibidos, option):
     for valor in valores_recibidos:
 
-        if option!=1:
-            valores_recibidos[valor] = getServerData(valor,option)
+        if option != 1:
+            valores_recibidos[valor] = getServerData(valor, option)
         else:
-            getServerData(valor,option)
+            getServerData(valor, option)
     return valores_recibidos
 
 # Obtiene todas las variables y datos de un determinado objeto en thingworx y los retorna en un diccionario.
 # Devuelve una estructura que aun no conocemos muy bien, pero se debe utilizar el metodo items() para leeral
 
 
-def getServerData(objeto,option):
+def getServerData(objeto, option):
 
     tempurl = url + "/"+objeto+"_sise_v1/Services/GetPropertyValues"
 
     response = requests.request("POST", tempurl, headers=headers)
 
     result = json.loads(response.text)['rows'][0]
-    
-    if option==1:
+
+    if option == 1:
 
         for one in result:
 
@@ -155,15 +151,13 @@ def getServerData(objeto,option):
                 dics[str(one)] = result[one]
 
         for r in result:
-            
+
             if r in valores_recibir[objeto]:
-                valores_recibir[objeto][r]=result[r]
-        
+                valores_recibir[objeto][r] = result[r]
 
     else:
 
         return result
-
 
 
 def setProperty(key, value):
@@ -181,28 +175,28 @@ miObjeto = "central"
 
 
 def setValuesToThingworx(dic):
-   
+
     for valoruni in valores_enviar["central"]:
         if(valoruni[0] == 's'):
             setProperty(valoruni, str(dic[valoruni]))
 
 
-def setArduinoData():
+""" def setArduinoData():
     ras.sendArduino(dics)
 
 def getArduinoData():
 
     
     return ras.getArduino()
+ """
 
 
 def main():
-    getAllServerData(valores_recibir,1)
-    
-    
-    getAllServerData(objetos,0)
-    
-    #print valores_recibir
+    getAllServerData(valores_recibir, 1)
+
+    getAllServerData(objetos, 0)
+
+    # print valores_recibir
     """
     setArduinoData()
 
@@ -228,9 +222,7 @@ def main():
     print dics
     # Enviar al servidor todos los datos
     setAllServerData(valores_enviar)
-    #printAllData()
-
-
+    # printAllData()
 
 
 while(True):
