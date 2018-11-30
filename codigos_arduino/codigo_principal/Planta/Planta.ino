@@ -1,6 +1,6 @@
 /*
    Este código es para el monitoreo y control de los sensores y actuadores de una planta en el inverdanero iot que está desarrollando el semillero de investigación en sistemas embebidos.
-   Este códog se basa en el código del profesor David Velasquez, del departamento de ingeniería de sistemas de la universidad Eafit.
+   Este código se basa en el código del profesor David Velasquez, del departamento de ingeniería de sistemas de la universidad Eafit.
    Fecha: Septiembre 2018
    Convenciones:
    - sp = setPoitnt(valor deseado). P.e: spLuzBlanca = valor deseado de luz Blanca
