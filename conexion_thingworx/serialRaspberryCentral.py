@@ -24,7 +24,7 @@ arduino = 'indefinido'
 
 if sos == 'posix':
     # linux
-    arduino = '/dev/ttyACM0'
+    arduino = '/dev/ttyACM1'
 elif sos == 'nt':
     # windowns o mac
     arduino = 'COM6'
@@ -43,7 +43,7 @@ def getArduino():
     data = data.split(',')
     print "recibiendo de arduino: "
     # Orden de sensores
-    # luzBlanca, ph, luzInfrarroja, humedad_suelo, luz ultravioleta, temperatura_suelo
+    # nivelCo2, temperatura del agua, humedad ambiente, nivel del agua, temperatura ambiente
     print data
     if len(data) == cantidadDatosSensores:
         print "verdadero"
@@ -56,9 +56,18 @@ def getArduino():
 
     return datosDic
 
+def convertirStringABool(valor):
+    if valor == False:
+        return 0
+    else:
+        return 1
 
 def sendArduino(valores_recibir):
     aList = list(valores_recibir.values())
+    # Conversion de los valores de string a booleanos para arduino
+    aList[0] = str(convertirStringABool(aList[0]))
+    aList[2] = str(convertirStringABool(aList[2]))
+    aList[3] = str(convertirStringABool(aList[3]))
     aString = ','.join(map(str, aList))
     aString = aString + ','
     ser.write(aString.encode('ascii'))

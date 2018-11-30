@@ -428,7 +428,7 @@ void setup() {
   PIDBlanca.SetMode(AUTOMATIC);
   PIDIR.SetMode(AUTOMATIC);
   PIDUV.SetMode(AUTOMATIC);
-  while (!SI1145.Begin());
+  //while (!SI1145.Begin());
   MeasInitialize();
 
   tiempoInicial = millis();

@@ -57,9 +57,18 @@ def getArduino():
 
     return datosDic
 
+def convertirStringABool(valor):
+    if valor == False:
+        return 0
+    else:
+        return 1
 
 def sendArduino(valores_recibir):
     aList = list(valores_recibir.values())
+    # Conversion de los valores de string a booleanos para arduino
+    aList[0] = str(convertirStringABool(aList[0]))
+    aList[1] = str(convertirStringABool(aList[1]))
+    aList[2] = str(convertirStringABool(aList[2]))
     aString = ','.join(map(str, aList))
     aString = aString + ','
     ser.write(aString.encode('ascii'))

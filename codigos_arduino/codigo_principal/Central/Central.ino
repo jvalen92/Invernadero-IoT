@@ -6,7 +6,7 @@
    - sp = setPoitnt(valor deseado). P.e: spLuzBlanca = valor deseado de luz Blanca
    - Se omite el uso de las preposiciones como "de", "del", "de la", en los nombres de las variables.
      P.e: luzInfrarrojaDeEntrada es en nuestro código luzInfrarrojaEntrada.
- */
+*/
 
 //Definción de librerías
 #include "DHT.h"
@@ -43,7 +43,6 @@
 //#define DHTTYPE DHT22   // DHT 22  (AM2302)
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
 DHT dht(DHTPIN, DHTTYPE);
-DS1307 clock; //Definición para el reloj
 
 //Definición de constantes
 const float DC_GAIN = 8.5; //define the DC gain of amplifier nivelCo2 sensor
@@ -64,6 +63,7 @@ const int numReadingsnivelCo2 = 5;
 const int TOTAL_VALORES_RASP = 5;
 
 /*
+  Maxthermo tabla de datos
   Nombre     Pin Arduino
   DIN -       4
   SCLK -      3
@@ -72,6 +72,7 @@ const int TOTAL_VALORES_RASP = 5;
   Gnd -       0v
   Out -       Salida
 */
+//Variabes para el maxthermo
 const byte CS = 2;
 const byte CLOCK = 3;
 const byte DATA = 4;
@@ -93,8 +94,8 @@ int enivelCo2 = 0;                                                              
 float valoresRasp[TOTAL_VALORES_RASP] = {0};                                            //Arreglo que guardara los valores recibidos desde la raspberry
 
 //Variables para control
-bool entradaAire = false;
-bool salidaAire = false;
+unsigned int entradaAire = 0;
+unsigned int salidaAire = 0;
 unsigned int modoManual = 0;
 
 //Set points (valores deseados)
@@ -264,10 +265,6 @@ void readsens()
       tp = t;
       hp = h;
     }
-    //printsens();
-    //RTC get time
-    clock.getTime();
-
     String datalog = ""; // Recoge las lecturas finales de los sensores y las envia por serial a la raspberry
     datalog += String(nivelCo2, DEC);
     datalog += ",";
@@ -278,7 +275,6 @@ void readsens()
     datalog += String(nivelAgua, 4);
     datalog += ",";
     datalog += String(t, 4);
-
     Serial.println(datalog);
 
     tiempoInicial = millis();
@@ -287,17 +283,6 @@ void readsens()
 
 void printsens()
 { //Prints sensors information on Serial monitor
-  Serial.print(clock.hour, DEC);
-  Serial.print(':');
-  Serial.print(clock.minute, DEC);
-  Serial.print(':');
-  Serial.print(clock.second, DEC);
-  Serial.print(' ');
-  Serial.print(clock.dayOfMonth, DEC);
-  Serial.print('/');
-  Serial.print(clock.month, DEC);
-  Serial.print('/');
-  Serial.print(clock.year, DEC);
   Serial.print(" Water Level: ");
   Serial.print(nivelAgua);
   Serial.print(" cm Ambient Temperature: ");
@@ -377,6 +362,7 @@ void getValoresRasp()
   }
   if (valoresRasp[1] <= 45)
   {
+    //No hay control
     spTempAgua = valoresRasp[1];
   }
   else
@@ -387,6 +373,25 @@ void getValoresRasp()
   modoManual = valoresRasp[2];
   entradaAire = valoresRasp[0];
   salidaAire = valoresRasp[3];
+}
+
+void funcionarManual() {
+  if (entradaAire) {
+    digitalWrite(VENTILADOR_ENTRADA, HIGH);
+  } else {
+    digitalWrite(VENTILADOR_ENTRADA, LOW);
+  }
+
+  if (salidaAire) {
+    digitalWrite(VENTILADOR_SALIDA, HIGH);
+  } else {
+    digitalWrite(VENTILADOR_SALIDA, LOW);
+  }
+
+  tempAguactrl();
+
+  delay(1000);
+
 }
 
 void MeasInitialize()
@@ -407,8 +412,8 @@ void MeasInitialize()
   IP1 = constrain(0.0952 * InputIP1 - 49.732, 0, 30);
   IP2 = constrain(0.088 * InputIP2 - 44.972, 0, 30);
 }
-
-void writeValue(uint16_t value)
+// Método para establecer el voltaje al maxthermo (writeValue)
+void escribirValorMaxthermo(uint16_t value)
 {
   digitalWrite(CS, LOW); //start of 12 bit data sequence
   digitalWrite(CLOCK, LOW);
@@ -423,8 +428,6 @@ void writeValue(uint16_t value)
   }
   digitalWrite(CS, HIGH); //end 12 bit data sequence
 }
-
-//writeValue(700);//Valor de salida en voltaje
 
 void setup()
 {
@@ -448,7 +451,6 @@ void setup()
 
   //DAC
   pinMode(DATA, OUTPUT);
-  pinMode(CLOCK, OUTPUT);
   pinMode(CS, OUTPUT);
   digitalWrite(CS, HIGH);
   digitalWrite(DATA, LOW);
@@ -456,10 +458,7 @@ void setup()
 
   //Communications
   Serial.begin(9600);
-  //Serial.println("DHTxx test!");
 
-  //SDinitialize();
-  clock.begin();
   dht.begin();
   MeasInitialize();
 
@@ -468,11 +467,23 @@ void setup()
   tiempoInicialNivelAgua = millis();
 }
 
+void tempAguactrl() {
+  //El control lo hace el propio maxthermo
+  escribirValorMaxthermo(spTempAgua * (1023.0 / 50.0));
+}
+
 void loop()
 {
   tiempoActual = millis();
   readsens();          //Read sensors
-  nivelAguaevelctrl(); //Activate water level controller
-  nivelCo2ctrl();      //Activate temperature controller
+  getValoresRasp();
+  if (modoManual) {
+    //Manual
+    funcionarManual();
+  } else {
+    //Automatico
+    nivelCo2ctrl();
+    tempAguactrl();
+  }
   analogWrite(SPCMAX, 0);
 }
