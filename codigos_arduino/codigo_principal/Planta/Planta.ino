@@ -122,7 +122,6 @@ unsigned long tiempoRelativoPh = 0;  //Tiempo relativo de muestreo del sensor pH
 PID PIDBlanca(&luzEntrada, &luzSalida, &spLuz, CONSKP, CONSKI, CONSKD, DIRECT);
 PID PIDIR(&luzInfrarrojaEntrada, &luzInfrarrojaSalida, &spIR, CONSKP, CONSKI, CONSKD, DIRECT);
 PID PIDUV(&luzUvEntrada, &luzUvSalida, &spUv, CONSKP, CONSKI, CONSKD, DIRECT);
-DS1307 clock;//Objeto para el uso de los métodos del RTC
 SI114X SI1145 = SI114X(); //Objeto para el sensor de luz
 
 
@@ -236,10 +235,7 @@ void leerSensores() { //Read sensors information and store it in variables
     //m = analogRead(SOIL);
     temperaturaSuelo = temperaturaEntrada * 500.0 / 1023.0;
     ph = phEntrada * 5.0 * 3.5 / 1023.0 + OFFSET;
-    //printsens();
-    //RTC get time
-    clock.getTime();
-
+    
     String datalog = "";
     datalog += String(luzBlanca, 4);
     datalog += ",";
@@ -260,17 +256,6 @@ void leerSensores() { //Read sensors information and store it in variables
 }
 
 void printsens() { //Prints sensors information on Serial monitor
-  Serial.print(clock.hour, DEC);
-  Serial.print(':');
-  Serial.print(clock.minute, DEC);
-  Serial.print(':');
-  Serial.print(clock.second, DEC);
-  Serial.print(' ');
-  Serial.print(clock.dayOfMonth, DEC);
-  Serial.print('/');
-  Serial.print(clock.month, DEC);
-  Serial.print('/');
-  Serial.print(clock.year, DEC);
   Serial.print(" Luminous flux: ");
   Serial.print(luzBlanca);
   Serial.print(" *C luzInfrarroja Sensor: ");
@@ -443,7 +428,6 @@ void setup() {
   PIDBlanca.SetMode(AUTOMATIC);
   PIDIR.SetMode(AUTOMATIC);
   PIDUV.SetMode(AUTOMATIC);
-  clock.begin();
   while (!SI1145.Begin());
   MeasInitialize();
 
