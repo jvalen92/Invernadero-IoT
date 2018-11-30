@@ -369,29 +369,28 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
   }
 
   //Los siguientes condicionales son porque en la parte de control solo podemos garantizar un control hasta el 60 % del valor
-  if (valoresRasp[7] <= 600) {
-    spLuzBlanca = valoresRasp[7];
+  if (valoresRasp[8] <= 600) {
+    spLuzBlanca = valoresRasp[8];
   } else {
     spLuzBlanca = 600;
   }
-  if (valoresRasp[6] <= 600) {
-    spLuzUv = valoresRasp[6];
+  if (valoresRasp[7] <= 600) {
+    spLuzUv = valoresRasp[7];
   } else {
     spLuzUv = 600;
   }
-  if (valoresRasp[5] <= 600) {
-    spLuzIR = valoresRasp[5];
+  if (valoresRasp[6] <= 600) {
+    spLuzIR = valoresRasp[6];
   } else {
     spLuzIR = 600;
   }
-
   if (valoresRasp[3] <= 60) {
     spHumedadSuelo = valoresRasp[3];
   } else {
     spHumedadSuelo = 60;
   }
-  estadoValvula = valoresRasp[1];
   motobomba = valoresRasp[2];
+  estadoValvula = valoresRasp[1];
   modoManual = valoresRasp[0];
   //Aqui va la parte de modificar las variables de los actuadores necesarios.
 }
