@@ -3,7 +3,7 @@ import json
 import requests
 import time
 import datetime
-#import serialRaspberry as ras
+import serialRaspberryCentral as ras
 
 # Definiendo sistema operativo para la variable clear que sirve para limpiar la pantalla
 sos = os.name
@@ -56,7 +56,9 @@ valores_recibir = {
     "central": {
         "a_co2_sise": "0",
         "a_temperatura_tanque_sise": "0",
-        "a_ventilardor_entrada_sise": "0"
+        "a_ventilador_entrada_sise": "0",
+        "a_ventilador_salida_sise": "0",
+        "a_manual_mode_central_sise": "0"
 
     }
 
@@ -181,14 +183,13 @@ def setValuesToThingworx(dic):
             setProperty(valoruni, str(dic[valoruni]))
 
 
-""" def setArduinoData():
+def setArduinoData():
     ras.sendArduino(dics)
+
 
 def getArduinoData():
 
-    
     return ras.getArduino()
- """
 
 
 def main():
@@ -197,27 +198,24 @@ def main():
     getAllServerData(objetos, 0)
 
     # print valores_recibir
-    """
+
     setArduinoData()
 
-    gett=getArduinoData()
+    gett = getArduinoData()
 
-    if(gett!=None):
-
+    if(gett != None):
 
         now = datetime.datetime.now()
         print "\n"
         print now.strftime("%Y-%m-%d %H:%M")
 
-        for key,value in dics.iteritems():
+        for key, value in dics.iteritems():
             print key, " : ", dics[key]
 
-        for key,value in gett.iteritems():
+        for key, value in gett.iteritems():
             print key, " : ", gett[key]
-        
 
         setValuesToThingworx(gett)
-    """
 
     print dics
     # Enviar al servidor todos los datos

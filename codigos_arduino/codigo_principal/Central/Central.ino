@@ -61,7 +61,7 @@ const float nivelAguao_min = 0;         //Minimum water level
 const float nivelAguao_max = 25;        //Maximum water level
 const int numReadings = 40;
 const int numReadingsnivelCo2 = 5;
-const int TOTAL_VALORES_RASP = 2;
+const int TOTAL_VALORES_RASP = 5;
 
 /*
   Nombre     Pin Arduino
@@ -91,6 +91,11 @@ float IP1 = 0;                                                                  
 float IP2 = 0;                                                                          //Define IP2 as float for Plant 2 current in Amps
 int enivelCo2 = 0;                                                                      //Define et as int for nivelCo2 concentration error
 float valoresRasp[TOTAL_VALORES_RASP] = {0};                                            //Arreglo que guardara los valores recibidos desde la raspberry
+
+//Variables para control
+bool entradaAire = false;
+bool salidaAire = false;
+unsigned int modoManual = 0;
 
 //Set points (valores deseados)
 float spTempAgua = 30;
@@ -263,8 +268,7 @@ void readsens()
     //RTC get time
     clock.getTime();
 
-    //SD Logging
-    String datalog = ""; //Define datalog as string for storing data in SD as text
+    String datalog = ""; // Recoge las lecturas finales de los sensores y las envia por serial a la raspberry
     datalog += String(nivelCo2, DEC);
     datalog += ",";
     datalog += String(wt, 4);
@@ -356,64 +360,33 @@ void getValoresRasp()
     {
       if (recibido.charAt(i) == ',')
       {
-        String value = recibido.substring(r, i);
-        if (value == "True")
-        {
-          valoresRasp[t] = 1;
-        }
-        else if (value == "False")
-        {
-          valoresRasp[t] = 0;
-        }
-        else
-        {
-          valoresRasp[t] = recibido.substring(r, i).toFloat();
-        }
-
+        valoresRasp[t] = recibido.substring(r, i).toFloat();
         r = (i + 1);
         t++;
       }
     }
   }
-
   //Los siguientes condicionales son porque en la parte de control solo podemos garantizar un control hasta el 60 % del valor
-  if (valoresRasp[7] <= 600)
+  if (valoresRasp[4] <= 6000)
   {
-    spLuzBlanca = valoresRasp[7];
+    spNivelCo2 = valoresRasp[4];
   }
   else
   {
-    spLuzBlanca = 600;
+    spNivelCo2 = 6000;
   }
-  if (valoresRasp[6] <= 600)
+  if (valoresRasp[1] <= 45)
   {
-    spLuzUv = valoresRasp[6];
-  }
-  else
-  {
-    spLuzUv = 600;
-  }
-  if (valoresRasp[5] <= 600)
-  {
-    spLuzIR = valoresRasp[5];
+    spTempAgua = valoresRasp[1];
   }
   else
   {
-    spLuzIR = 600;
+    spTempAgua = 45;
   }
 
-  if (valoresRasp[3] <= 60)
-  {
-    spHumedadSuelo = valoresRasp[3];
-  }
-  else
-  {
-    spHumedadSuelo = 60;
-  }
-  estadoValvula = valoresRasp[1];
-  motobomba = valoresRasp[2];
-  modoManual = valoresRasp[0];
-  //Aqui va la parte de modificar las variables de los actuadores necesarios.
+  modoManual = valoresRasp[2];
+  entradaAire = valoresRasp[0];
+  salidaAire = valoresRasp[3];
 }
 
 void MeasInitialize()
