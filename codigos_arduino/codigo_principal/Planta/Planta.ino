@@ -221,10 +221,9 @@ void leerSensores() { //Read sensors information and store it in variables
   luzEntrada = smooth(LDR, totalLuz, lecturaLuz, indiceLuz);
   luzInfrarrojaEntrada = smoothIR(totalIR, lecturaInfrarroja, indiceInfrarroja);
   luzInfrarrojaEntrada = constrain(luzInfrarrojaEntrada, 0 , 1023);
-  //luzInfrarrojaMap = flmap(luzInfrarrojaEntrada, 0, 1020, 0, 1023);
   luzUvEntrada = smoothUV(totalUv, lecturaUv, indiceUv);
   luzUvEntrada = constrain(luzUvEntrada,0, 300);
-  UvEntradaMap = flmap(luzUvEntrada, 0, 300, 0, 1023);
+  UvEntradaMap = flmap(luzUvEntrada, 0, 300, 0, 1023); //Mapear la medida del sensor entre 0-1023
   humedadSueloEntrada = smooth(SOIL, totalHumedadSuelo, lecturaHumedadSuelo, indiceHumedadSuelo);
   temperaturaEntrada = smooth(LM35, totalTemperatura, lecturaTemperatura, indiceTemperatura);
   phEntrada = smoothPH(PH, totalPH, lecturaPh, indicePh);
@@ -283,7 +282,7 @@ Serial.println();
 }
 
 void lightctrl() {  //Light controller subroutine
-  spLuz = constrain(151.04 * log(spLuzBlanca) - 390.08, 0, 1023); //Pasa de lumens a valores analogos
+  spLuz = constrain(151.04 * log(spLuzBlanca) - 390.08, 0, 1023); //Restringe el valor entre 0 y 1023.
   spIR = constrain(spLuzIR, 0, 1023);
   spUv = constrain(spLuzUv, 0, 1023);
   PIDBlanca.Compute(); //Calcula que tanto se debe prender la luz blanca
