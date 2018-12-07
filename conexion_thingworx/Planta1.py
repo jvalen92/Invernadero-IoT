@@ -16,7 +16,7 @@ elif sos == 'nt':
 # Variables
 
 iteration = 0
-tiempo = 0  # Tiempo para enviar y recibir datos
+tiempo = 1  # Tiempo para enviar y recibir datos
 dics = {}
 
 # Declaracion de estructuras utiles

@@ -44,7 +44,7 @@ def getArduino():
     data = data.split(',')
     print "recibiendo de arduino: "
     # Orden de sensores
-    # luzBlanca, ph, luzInfrarroja, humedad_suelo, luz ultravioleta, temperatura_suelo
+    print "luzBlanca, ph, luzInfrarroja, humedad_suelo, luz ultravioleta, temperatura_suelo"
     print data
     if len(data) == cantidadDatosSensores:
         print "verdadero"
@@ -70,10 +70,10 @@ def sendArduino(valores_recibir):
     aList[1] = str(convertirStringABool(aList[1]))
     aList[2] = str(convertirStringABool(aList[2]))
     aString = ','.join(map(str, aList))
-    aString = aString + ','
+    aString += ','
     ser.write(aString.encode('ascii'))
     print "enviando a arduino: "
     # Orden de actuadores
-    # modo_manual, valvula, motobomba, humedad_suelo, ph, temperatura_suelo, infrarroja, uv, blanca
+    print "modo_manual, valvula, motobomba, humedad_suelo, ph, temperatura_suelo, infrarroja, uv, blanca"
     print aString
     time.sleep(1)

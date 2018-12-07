@@ -60,9 +60,9 @@ float luzBlanca = 0,  //Luz blanca (luz visible)
       errorHumedadSuelo = 0, //Error de humedad de la tierra
 
       //Set points
-      spLuzBlanca = 300,  //Set-point (Valor deseado) de iluminacion blanca (valor por defecto en 300 lux)
-      spLuzUv = 300,
-      spLuzIR = 300,
+      spLuzBlanca = 0,  //Set-point (Valor deseado) de iluminacion blanca (valor por defecto en 300 lux)
+      spLuzUv = 0,
+      spLuzIR = 0,
       spHumedadSuelo = 50;  //Set-point (Valor deseado) de humedad del suelo (valor por defeto en 50%)
 
 unsigned int hrs = 0; //Variable para almacenar las horas (HOUR) del reloj de tiempo real
@@ -91,11 +91,11 @@ double spLuz = 600,
 
 //Variables para media movil
 int lecturaLuz[NUMREADS] = {0},
-    lecturaHumedadSuelo[NUMREADS] = {0},
-    lecturaTemperatura[NUMREADS] = {0},
-    lecturaPh[NUMREADS] = {0},
-    lecturaInfrarroja[NUMREADS] = {0},
-    lecturaUv[NUMREADS] = {0};
+                           lecturaHumedadSuelo[NUMREADS] = {0},
+                               lecturaTemperatura[NUMREADS] = {0},
+                                   lecturaPh[NUMREADS] = {0},
+                                       lecturaInfrarroja[NUMREADS] = {0},
+                                           lecturaUv[NUMREADS] = {0};
 
 int indiceLuz = 0,
     indiceHumedadSuelo = 0,
@@ -222,7 +222,7 @@ void leerSensores() { //Read sensors information and store it in variables
   luzInfrarrojaEntrada = smoothIR(totalIR, lecturaInfrarroja, indiceInfrarroja);
   luzInfrarrojaEntrada = constrain(luzInfrarrojaEntrada, 0 , 1023);
   luzUvEntrada = smoothUV(totalUv, lecturaUv, indiceUv);
-  luzUvEntrada = constrain(luzUvEntrada,0, 300);
+  luzUvEntrada = constrain(luzUvEntrada, 0, 300);
   UvEntradaMap = flmap(luzUvEntrada, 0, 300, 0, 1023); //Mapear la medida del sensor entre 0-1023
   humedadSueloEntrada = smooth(SOIL, totalHumedadSuelo, lecturaHumedadSuelo, indiceHumedadSuelo);
   temperaturaEntrada = smooth(LM35, totalTemperatura, lecturaTemperatura, indiceTemperatura);
@@ -239,22 +239,6 @@ void leerSensores() { //Read sensors information and store it in variables
     //m = analogRead(SOIL);
     temperaturaSuelo = temperaturaEntrada * 500.0 / 1023.0;
     ph = phEntrada * 5.0 * 3.5 / 1023.0 + OFFSET;
-    
-    String datalog = "";
-    datalog += String(luzBlanca, 4);
-    datalog += ",";
-    datalog += String(ph, 4);
-    datalog += ",";
-    datalog += String(luzInfrarroja, 4);
-    datalog += ",";
-    datalog += String(humedadSuelo, 4);
-    datalog += ",";
-    datalog += String(luzUltravioleta, 4);
-    datalog += ",";
-    datalog += String(temperaturaSuelo, 4);
-    Serial.println(datalog);
-
-
     tiempoInicial = millis();
   }
 }
@@ -270,15 +254,15 @@ void printsens() { //Prints sensors information on Serial monitor
   Serial.print(luzUltravioleta);
   Serial.print(" UV: ");
   Serial.print(luzUvSalida);
-//  Serial.print(" lux Soil Moisture: ");
-//  Serial.print(humedadSuelo);
-//  Serial.print(" % Valve: ");
-//  Serial.print(motobomba);
-//  Serial.print(" Soil Temperature: ");
-//  Serial.print(temperaturaSuelo);
-//  Serial.print(" ph Sensor: ");
-//  Serial.println(ph);
-Serial.println();
+  Serial.print(" lux Soil Moisture: ");
+  Serial.print(humedadSuelo);
+  Serial.print(" % Valve: ");
+  Serial.print(motobomba);
+  Serial.print(" Soil Temperature: ");
+  Serial.print(temperaturaSuelo);
+  Serial.print(" ph Sensor: ");
+  Serial.println(ph);
+  Serial.println();
 }
 
 void lightctrl() {  //Light controller subroutine
@@ -340,22 +324,16 @@ void MeasInitialize() {
   ph = phEntrada * 5.0 * 3.5 / 1023.0 + OFFSET;
 }
 
-void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las variables correspondientes
+void recibirValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las variables correspondientes
+  int r = 0;
+  int t = 0;
   if (Serial.available()) {
     String recibido = Serial.readString();
-    int r = 0;
-    int t = 0;
+
     for (int i = 0; i < recibido.length(); i++) {
       if (recibido.charAt(i) == ',') {
         String value = recibido.substring(r, i);
-        if (value == "True") {
-          valoresRasp[t] = 1;
-        } else if (value == "False") {
-          valoresRasp[t] = 0;
-        } else {
-          valoresRasp[t] = recibido.substring(r, i).toFloat();
-        }
-
+        valoresRasp[t] = value.toFloat();
         r = (i + 1);
         t++;
       }
@@ -386,7 +364,9 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
   motobomba = valoresRasp[2];
   estadoValvula = valoresRasp[1];
   modoManual = valoresRasp[0];
-  //Aqui va la parte de modificar las variables de los actuadores necesarios.
+
+  //Enviar valores a las raspberry
+  enviarValoresRasp();
 }
 
 void funcionarManual() {
@@ -407,8 +387,6 @@ void funcionarManual() {
   analogWrite(UVLED, spLuzUv * (255.0 / 1000.0));
   analogWrite(IRLED, spLuzIR * (255.0 / 1000.0));
   analogWrite(PLED, spLuzBlanca * (255.0 / 1000.0));
-
-  //delay(1000);
 }
 
 void setup() {
@@ -437,17 +415,34 @@ void setup() {
   PIDBlanca.SetMode(AUTOMATIC);
   PIDIR.SetMode(AUTOMATIC);
   PIDUV.SetMode(AUTOMATIC);
-  //while (!SI1145.Begin());
+  //Inicializar sensor UV y IR
+  while (!SI1145.Begin());
   MeasInitialize();
 
   tiempoInicial = millis();
   tiempoInicialPh = millis();
 }
 
-void loop() {
-  tiempoActual = millis();
-  leerSensores();
-  getValoresRasp();
+void enviarValoresRasp() {
+  String datalog = "";
+  datalog += String(luzBlanca, 4);
+  datalog += ",";
+  datalog += String(ph, 4);
+  datalog += ",";
+  datalog += String(luzInfrarroja, 4);
+  datalog += ",";
+  datalog += String(humedadSuelo, 4);
+  datalog += ",";
+  datalog += String(luzUltravioleta, 4);
+  datalog += ",";
+  datalog += String(temperaturaSuelo, 4);
+  Serial.println(datalog);
+}
+
+void serialEvent() {
+  //Obteniendo los valores cuando estén entrando en serial
+  recibirValoresRasp();
+  //Operar cuando haya valores
   if (modoManual) {
     //Manual
     funcionarManual();
@@ -455,6 +450,10 @@ void loop() {
     //Automatico
     lightctrl();  //Activate light controller
     shumidctrl(); //Activate soil humidity controller
-    //analogWrite(5, 200);
   }
+}
+
+void loop() {
+  tiempoActual = millis();
+  leerSensores();
 }

@@ -212,7 +212,7 @@ int readnivelCo2(double ADCnivelCo2, float *pcurve) {
   }
 }
 
-void readsens() { //Read sensors information and store it in variables
+void leerSensores() { //Read sensors information and store it in variables
   InputiempoRelativoNivelCo2 = smoothnivelCo2(nivelCo2SEN, totalnivelCo2, readingsnivelCo2, readIndexnivelCo2);
   //InputiempoRelativoNivelAgua = smooth(sultra(WLECHO, WLTRIG), totalnivelAgua, readingsnivelAgua, readIndexnivelAgua, 'M');
   InputiempoRelativoNivelAgua = sultra(WLECHO, WLTRIG);
@@ -253,17 +253,6 @@ void readsens() { //Read sensors information and store it in variables
       tp = t;
       hp = h;
     }
-    String datalog = ""; // Recoge las lecturas finales de los sensores y las envia por serial a la raspberry
-    datalog += String(nivelCo2, DEC);
-    datalog += ",";
-    datalog += String(wt, 4);
-    datalog += ",";
-    datalog += String(h, 4);
-    datalog += ",";
-    datalog += String(nivelAgua, 4);
-    datalog += ",";
-    datalog += String(t, 4);
-    Serial.println(datalog);
 
     tiempoInicial = millis();
   }
@@ -317,7 +306,7 @@ void nivelCo2ctrl() { //nivelCo2 Controller
   }
 }
 
-void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las variables correspondientes
+void recibirValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las variables correspondientes
   if (Serial.available())
   {
     String recibido = Serial.readString();
@@ -351,6 +340,9 @@ void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las
   modoManual = valoresRasp[2];
   entradaAire = valoresRasp[0];
   salidaAire = valoresRasp[3];
+
+  //Enviar valores a las raspberry
+  enviarValoresRasp();
 }
 
 void funcionarManual() {
@@ -445,10 +437,23 @@ void tempAguactrl() {
   escribirValorMaxthermo(spTempAgua * (1023.0 / 50.0));
 }
 
-void loop() {
-  tiempoActual = millis();
-  readsens();          //Read sensors
-  getValoresRasp();
+// Recoge las lecturas finales de los sensores y las envia por serial a la raspberry
+void enviarValoresRasp() {
+  String datalog = "";
+  datalog += String(nivelCo2, DEC);
+  datalog += ",";
+  datalog += String(wt, 4);
+  datalog += ",";
+  datalog += String(h, 4);
+  datalog += ",";
+  datalog += String(nivelAgua, 4);
+  datalog += ",";
+  datalog += String(t, 4);
+  Serial.println(datalog);
+}
+
+void serialEvent() {
+  recibirValoresRasp();
   if (modoManual) {
     //Manual
     funcionarManual();
@@ -457,5 +462,10 @@ void loop() {
     nivelCo2ctrl();
     tempAguactrl();
   }
+
+}
+void loop() {
+  tiempoActual = millis();
+  leerSensores();
   analogWrite(SPCMAX, 0);
 }
