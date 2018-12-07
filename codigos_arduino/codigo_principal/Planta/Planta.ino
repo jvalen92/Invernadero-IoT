@@ -23,11 +23,11 @@
 
 #define PH 2 //Sensor de ph
 
-#define LM35 3  //Sensor de temperatura del suelo
+#define LM35 A8  //Sensor de temperatura del suelo
 
-#define VALVULA_IRRIGACION 7  //Electrovalvula para irrigacion 
-#define VALVULA_GOTEO 8  //Electrovalvula para goteo 
-#define MOTOPIN 9 //La motobomba 
+#define VALVULA_IRRIGACION 35  //Electrovalvula para irrigacion 
+#define VALVULA_GOTEO 36  //Electrovalvula para goteo 
+#define MOTOPIN 34 //La motobomba 
 #define UVLED 13 //LEDS Uv
 #define IRLED 12  //LEDs infrarojos en pin 5
 #define PLED 11  //LEDs blancos de potencia
@@ -253,7 +253,7 @@ void leerSensores() { //Read sensors information and store it in variables
     datalog += String(luzUltravioleta, 4);
     datalog += ",";
     datalog += String(temperaturaSuelo, 4);
-    //Serial.println(datalog);
+    Serial.println(datalog);
 
 
     tiempoInicial = millis();

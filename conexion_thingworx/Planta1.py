@@ -36,7 +36,7 @@ objetos = {"planta1": {}}
 # Valores oficiales
 
 claves_enviar = {
-    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise"]
+    "Plant_sise": ["s_luz_uv_sise", "s_luz_infrarroja_sise", "s_luz_blanca_sise", "s_humedad_suelo_sise", "s_ph_sise", "s_temperatura_suelo_sise"]
 }
 
 claves_recibir = {
@@ -51,6 +51,7 @@ valores_enviar = {
         "s_luz_blanca_sise": "0",
         "s_humedad_suelo_sise": "0",
         "s_ph_sise": "0",
+        "s_temperatura_suelo_sise":"0",
 
     }
 
