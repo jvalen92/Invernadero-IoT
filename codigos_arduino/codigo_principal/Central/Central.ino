@@ -18,10 +18,6 @@
 #define SPCMAX 10     //Setpoint de corriente de temperatura para el maxthermo
 #define nivelCo2SEN 2 //Sensor de nivelCo2
 
-#define WCS1800C 6  //Current sensor for central on A6 ?
-#define WCS1800P2 0 //Current sensor for plant 2 on A0 ?
-#define WCS1800P1 7 //Current sensor for plant 1 on A7 ?
-
 #define DHTPIN 9 //Sensor de temperatura y humedad
 
 #define ENCVENTILADOR_ENTRADA 18 //Hall sensor for Fan In on digital pin D3 ?
@@ -133,13 +129,11 @@ unsigned long tiempoInicialNivelAgua = 0;
 unsigned long tiempoRelativoNivelAgua = 0;
 
 //Subroutines and functions
-float flmap(float x, float in_min, float in_max, float out_min, float out_max)
-{
+float flmap(float x, float in_min, float in_max, float out_min, float out_max) {
   return constrain((float)((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min), out_min, out_max);
 }
 
-unsigned int smooth(int meas, long &total, int *readings, int &readIndex, char type)
-{
+unsigned int smooth(int meas, long &total, int *readings, int &readIndex, char type) {
   // subtract the last reading
   total = total - readings[readIndex];
   // read from the sensor:
@@ -167,8 +161,7 @@ unsigned int smooth(int meas, long &total, int *readings, int &readIndex, char t
   return total / numReadings;
 }
 
-unsigned int smoothnivelCo2(int pin, long &tot, int *reads, int &readInd)
-{
+unsigned int smoothnivelCo2(int pin, long &tot, int *reads, int &readInd) {
   // subtract the last reading
   tiempoRelativoNivelCo2 = tiempoActual - tiempoInicialNivelCo2;
   if (tiempoRelativoNivelCo2 >= 20)
@@ -192,9 +185,9 @@ unsigned int smoothnivelCo2(int pin, long &tot, int *reads, int &readInd)
   // calculate the average:
   return tot / numReadingsnivelCo2;
 }
+
 //Sensor ultrasonido
-float sultra(byte echop, byte trigp)
-{
+float sultra(byte echop, byte trigp) {
   tiempoRelativoNivelAgua = tiempoActual - tiempoInicialNivelAgua;
   if (tiempoRelativoNivelAgua >= 50)
   {
@@ -207,8 +200,7 @@ float sultra(byte echop, byte trigp)
   return InputiempoRelativoNivelAgua;
 }
 
-int readnivelCo2(double ADCnivelCo2, float *pcurve)
-{
+int readnivelCo2(double ADCnivelCo2, float *pcurve) {
   float volts = ADCnivelCo2 * 5.0 / 1023.0; //Convert nivelCo2 ADC to volts
   if ((volts / DC_GAIN) >= ZERO_POINT_VOLTAGE)
   {
@@ -220,16 +212,12 @@ int readnivelCo2(double ADCnivelCo2, float *pcurve)
   }
 }
 
-void readsens()
-{ //Read sensors information and store it in variables
+void readsens() { //Read sensors information and store it in variables
   InputiempoRelativoNivelCo2 = smoothnivelCo2(nivelCo2SEN, totalnivelCo2, readingsnivelCo2, readIndexnivelCo2);
   //InputiempoRelativoNivelAgua = smooth(sultra(WLECHO, WLTRIG), totalnivelAgua, readingsnivelAgua, readIndexnivelAgua, 'M');
   InputiempoRelativoNivelAgua = sultra(WLECHO, WLTRIG);
   //Inputt = smooth(WLPIN, totall, readingsl, readIndexl);
   Inputwt = smooth(TEMP_AGUA, totalwt, readingswt, readIndexwt, 'A');
-  InputIC = smooth(WCS1800C, totalIC, readingsIC, readIndexIC, 'A');
-  InputIP1 = smooth(WCS1800P1, totalIP1, readingsIP1, readIndexIP1, 'A');
-  InputIP2 = smooth(WCS1800P2, totalIP2, readingsIP2, readIndexIP2, 'A');
   tiempoRelativo = tiempoActual - tiempoInicial;
   if (tiempoRelativo >= tsamr)
   {
@@ -281,8 +269,7 @@ void readsens()
   }
 }
 
-void printsens()
-{ //Prints sensors information on Serial monitor
+void printsens() { //Prints sensors information on Serial monitor
   Serial.print(" Water Level: ");
   Serial.print(nivelAgua);
   Serial.print(" cm Ambient Temperature: ");
@@ -308,25 +295,21 @@ void printsens()
   Serial.println(" A");
 }
 
-void nivelCo2ctrl()
-{ //nivelCo2 Controller
+void nivelCo2ctrl() { //nivelCo2 Controller
   enivelCo2 = spNivelCo2 - nivelCo2;
-  if (enivelCo2 < -20)
-  { //If the nivelCo2 error is less than -100 ppm, turn off VENTILADOR_ENTRADA turn on VENTILADOR_SALIDA
+  if (enivelCo2 < -20) { //If the nivelCo2 error is less than -100 ppm, turn off VENTILADOR_ENTRADA turn on VENTILADOR_SALIDA
     digitalWrite(VENTILADOR_ENTRADA, LOW);
     digitalWrite(VENTILADOR_SALIDA, HIGH);
     VENTILADOR_ENTRADASTATE = 0;
     VENTILADOR_SALIDASTATE = 1;
   }
-  else if (enivelCo2 > 100)
-  { //else If the nivelCo2 error is greater than 100 ppm, turn on VENTILADOR_ENTRADA turn off VENTILADOR_SALIDA
+  else if (enivelCo2 > 100) { //else If the nivelCo2 error is greater than 100 ppm, turn on VENTILADOR_ENTRADA turn off VENTILADOR_SALIDA
     digitalWrite(VENTILADOR_ENTRADA, HIGH);
     digitalWrite(VENTILADOR_SALIDA, LOW);
     VENTILADOR_ENTRADASTATE = 1;
     VENTILADOR_SALIDASTATE = 0;
   }
-  else
-  { //In other case, keep the fans off
+  else { //In other case, keep the fans off
     digitalWrite(VENTILADOR_ENTRADA, LOW);
     digitalWrite(VENTILADOR_SALIDA, LOW);
     VENTILADOR_ENTRADASTATE = 0;
@@ -334,8 +317,7 @@ void nivelCo2ctrl()
   }
 }
 
-void getValoresRasp()
-{ //Recibe los datos desde la raspberry y los asigna a las variables correspondientes
+void getValoresRasp() { //Recibe los datos desde la raspberry y los asigna a las variables correspondientes
   if (Serial.available())
   {
     String recibido = Serial.readString();
@@ -352,21 +334,17 @@ void getValoresRasp()
     }
   }
   //Los siguientes condicionales son porque en la parte de control solo podemos garantizar un control hasta el 60 % del valor
-  if (valoresRasp[4] <= 6000)
-  {
+  if (valoresRasp[4] <= 6000) {
     spNivelCo2 = valoresRasp[4];
   }
-  else
-  {
+  else {
     spNivelCo2 = 6000;
   }
-  if (valoresRasp[1] <= 45)
-  {
+  if (valoresRasp[1] <= 45) {
     //No hay control
     spTempAgua = valoresRasp[1];
   }
-  else
-  {
+  else {
     spTempAgua = 45;
   }
 
@@ -394,16 +372,12 @@ void funcionarManual() {
 
 }
 
-void MeasInitialize()
-{
+void MeasInitialize() {
   for (unsigned int i = 0; i < 80; i++)
   {
     constrain(readnivelCo2(InputiempoRelativoNivelCo2, nivelCo2Curve), 400, 10000);
     InputiempoRelativoNivelAgua = sultra(WLECHO, WLTRIG);
     Inputwt = smooth(TEMP_AGUA, totalwt, readingswt, readIndexwt, 'A');
-    InputIC = smooth(WCS1800C, totalIC, readingsIC, readIndexIC, 'A');
-    InputIP1 = smooth(WCS1800P1, totalIP1, readingsIP1, readIndexIP1, 'A');
-    InputIP2 = smooth(WCS1800P2, totalIP2, readingsIP2, readIndexIP2, 'A');
   }
   nivelCo2 = constrain(readnivelCo2(InputiempoRelativoNivelCo2, nivelCo2Curve), 400, 10000);
   nivelAgua = flmap(InputiempoRelativoNivelAgua, nivelAguai_max, nivelAguai_min, nivelAguao_min, nivelAguao_max);
@@ -412,9 +386,9 @@ void MeasInitialize()
   IP1 = constrain(0.0952 * InputIP1 - 49.732, 0, 30);
   IP2 = constrain(0.088 * InputIP2 - 44.972, 0, 30);
 }
+
 // Método para establecer el voltaje al maxthermo (writeValue)
-void escribirValorMaxthermo(uint16_t value)
-{
+void escribirValorMaxthermo(uint16_t value) {
   digitalWrite(CS, LOW); //start of 12 bit data sequence
   digitalWrite(CLOCK, LOW);
   value = value << 2;
@@ -429,8 +403,7 @@ void escribirValorMaxthermo(uint16_t value)
   digitalWrite(CS, HIGH); //end 12 bit data sequence
 }
 
-void setup()
-{
+void setup() {
   //Configuración de pines
   pinMode(WLINVALVE, OUTPUT);
   pinMode(WLECHO, INPUT);
@@ -472,8 +445,7 @@ void tempAguactrl() {
   escribirValorMaxthermo(spTempAgua * (1023.0 / 50.0));
 }
 
-void loop()
-{
+void loop() {
   tiempoActual = millis();
   readsens();          //Read sensors
   getValoresRasp();
