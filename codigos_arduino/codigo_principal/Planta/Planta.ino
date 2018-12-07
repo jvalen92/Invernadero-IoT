@@ -252,7 +252,7 @@ void leerSensores() { //Read sensors information and store it in variables
     datalog += String(luzUltravioleta, 4);
     datalog += ",";
     datalog += String(temperaturaSuelo, 4);
-    //Serial.println(datalog);
+    Serial.println(datalog);
 
 
     tiempoInicial = millis();
