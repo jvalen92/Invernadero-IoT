@@ -19,15 +19,15 @@
 //Definicón de pines
 #define LDR A0 //Fotocelda para control de iluminacion visible blanca
 
-#define SOIL 1  //Sensor de humedad de la tierra
+#define SOIL 4  //Sensor de humedad de la tierra
 
 #define PH 2 //Sensor de ph
 
-#define LM35 3  //Sensor de temperatura del suelo
+#define LM35 1  //Sensor de temperatura del suelo
 
-#define VALVULA_IRRIGACION 7  //Electrovalvula para irrigacion 
-#define VALVULA_GOTEO 8  //Electrovalvula para goteo 
-#define MOTOPIN 9 //La motobomba 
+#define VALVULA_IRRIGACION 5  //Electrovalvula para irrigacion 
+#define VALVULA_GOTEO 6  //Electrovalvula para goteo 
+#define MOTOPIN 8 //La motobomba 
 #define UVLED 13 //LEDS Uv
 #define IRLED 12  //LEDs infrarojos en pin 5
 #define PLED 11  //LEDs blancos de potencia
@@ -408,7 +408,7 @@ void funcionarManual() {
   analogWrite(IRLED, spLuzIR * (255.0 / 1000.0));
   analogWrite(PLED, spLuzBlanca * (255.0 / 1000.0));
 
-  delay(1000);
+  //delay(1000);
 }
 
 void setup() {
@@ -421,7 +421,7 @@ void setup() {
   pinMode(MOTOPIN, OUTPUT);
 
 
-  pinMode(LED_BUILTIN, OUTPUT);
+  //pinMode(LED_BUILTIN, OUTPUT);
 
 
   //luzSalida cleaning
