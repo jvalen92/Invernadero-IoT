@@ -3,14 +3,14 @@
 */
 
 //definir entradas y salidas
-#define Echo 48//Pin que recibe la señal
-#define Trigger 49//Pin que dispara la señal
+#define Echo 27//Pin que recibe la señal
+#define Trigger 26//Pin que dispara la señal
 
 
 //constantes
-unsigned int tanLleno = 5; //Distancia que tiene que hay entre el agua y el cencor indicando que el tanque esta lleno
+unsigned int tanLleno = 5; //Distancia que tiene que hay entre el agua y el sensor indicando que el tanque esta lleno
 unsigned int alerta = 90;// alera de que es tanque esta por vaciarce
-unsigned int tanVacio = 100;//Distancia que tiene que hay entre el agua y el cencor indicando que el tanque esta vacio
+unsigned int tanVacio = 100;//Distancia que tiene que hay entre el agua y el sensor indicando que el tanque esta vacio
 
 int ping(int TriggerPin, int EchoPin) {// el metodo ping utiliza el sensor de ultra sonido para saber la distancia que hay entre el censor y algun punto
   long duration, distanceCm;
@@ -28,7 +28,7 @@ int ping(int TriggerPin, int EchoPin) {// el metodo ping utiliza el sensor de ul
 
 void info () {//El metodo info anuncia los diferentes cambios que hay en el nivel del agua
   int cm = ping(Trigger, Echo);
-  if (cm >= tanLleno && cm < alerta) { 
+  if (cm >= tanLleno && cm < alerta) {
     Serial.println("EL nivel del agua es aceptable");
     Serial.println(cm);
   }
@@ -50,5 +50,6 @@ void setup() {
 
 void loop() {
   info();
+  Serial.println("Running");
   delay(1000);
 }

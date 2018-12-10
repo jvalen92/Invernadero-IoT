@@ -24,7 +24,7 @@ arduino = 'indefinido'
 
 if sos == 'posix':
     # linux
-    arduino = '/dev/ttyACM1'
+    arduino = '/dev/ttyACM0'
 elif sos == 'nt':
     # windowns o mac
     arduino = 'COM6'
@@ -43,7 +43,7 @@ def getArduino():
     data = data.split(',')
     print "recibiendo de arduino: "
     # Orden de sensores
-    # nivelCo2, temperatura del agua, humedad ambiente, nivel del agua, temperatura ambiente
+    print "nivelCo2, temperatura del agua, humedad ambiente, nivel del agua, temperatura ambiente"
     print data
     if len(data) == cantidadDatosSensores:
         print "verdadero"
@@ -73,6 +73,6 @@ def sendArduino(valores_recibir):
     ser.write(aString.encode('ascii'))
     print "enviando a arduino: "
     # Orden de actuadores
-    # entrada_aire, temperatura_agua, modo_manual, salida_aire, nivel_co2
+    print "entrada_aire, temperatura_agua, modo_manual, salida_aire, nivel_co2"
     print aString
     time.sleep(1)

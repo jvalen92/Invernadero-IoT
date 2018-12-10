@@ -15,24 +15,26 @@
 #include "DS1307.h" //Libreria del reloj de tiempo real (RTC)
 
 //Definición de pines
-#define SPCMAX 10     //Setpoint de corriente de temperatura para el maxthermo
-#define nivelCo2SEN 2 //Sensor de nivelCo2
+#define SPCMAX 34     //Setpoint de corriente de temperatura para el maxthermo
+#define nivelCo2SEN A3 //Sensor de nivelCo2
 
-#define DHTPIN 9 //Sensor de temperatura y humedad
+#define DHTPIN 22 //Sensor de temperatura y humedad
 
-#define ENCVENTILADOR_ENTRADA 18 //Hall sensor for Fan In on digital pin D3 ?
-#define ENCVENTILADOR_SALIDA 19  //Hall sensor for Fan Out on digital pin D18 ?
+#define ENCVENTILADOR_ENTRADA 35 //Hall sensor for Fan In on digital pin D3 ?
+#define ENCVENTILADOR_SALIDA 36  //Hall sensor for Fan Out on digital pin D18 ?
 
-#define VENTILADOR_ENTRADA 5
-#define VENTILADOR_SALIDA 4
+#define VENTILADOR_ENTRADA 10
+#define VENTILADOR_SALIDA 9
 
-#define WLECHO 6    //Echo para ultrasonido utilizado para medir el nivel del agua
-#define WLTRIG 7    //Trigger para ultrasonido utilizado para medir el nivel del agua
-#define TEMP_AGUA 3 //Temperatura del agua
+// Ultrasonido SRF05
+#define WLECHO 27    //Echo para ultrasonido utilizado para medir el nivel del agua
+#define WLTRIG 26    //Trigger para ultrasonido utilizado para medir el nivel del agua
 
-#define WTOUT 31 //Water resistor SSR out ?
+#define TEMP_AGUA 37 //Temperatura del agua
 
-#define WLINVALVE 26 //Water level in valve in pin D26 ?
+#define WTOUT 38 //Water resistor SSR out ?
+
+#define WLINVALVE 39 //Water level in valve in pin D26 ?
 
 //Variables para las librerias y definción de constantes
 #define DHTTYPE DHT11 // DHT 11
@@ -50,10 +52,13 @@ const float wtadc_min = 50;             //Minimum ADC for temperature
 const float wtadc_max = 920;            //Maximum ADC for temperature
 const float wto_min = 20;               //Minimum temperature
 const float wto_max = 35;               //Maximum temperature
-const float nivelAguai_min = 20;        //Minimum water level
-const float nivelAguai_max = 41;        //Maximum water level
-const float nivelAguao_min = 0;         //Minimum water level
-const float nivelAguao_max = 25;        //Maximum water level
+//Poner de acuerdo a las medidas del tanque
+const float nivelAguai_min = 5;        //Minimum water level
+const float nivelAguai_max = 70;        //Maximum water level
+//Para el porcentage entregado
+const float nivelAguao_min = 100;         //Minimum water level
+const float nivelAguao_max = 0;        //Maximum water level
+
 const int numReadings = 40;
 const int numReadingsnivelCo2 = 5;
 const int TOTAL_VALORES_RASP = 5;
@@ -133,6 +138,10 @@ float flmap(float x, float in_min, float in_max, float out_min, float out_max) {
   return constrain((float)((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min), out_min, out_max);
 }
 
+float ultrasensor_flmap(float x, float in_min, float in_max, float out_min, float out_max) {
+  return constrain((float)((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min), out_max, out_min);
+}
+
 unsigned int smooth(int meas, long &total, int *readings, int &readIndex, char type) {
   // subtract the last reading
   total = total - readings[readIndex];
@@ -188,14 +197,19 @@ unsigned int smoothnivelCo2(int pin, long &tot, int *reads, int &readInd) {
 
 //Sensor ultrasonido
 float sultra(byte echop, byte trigp) {
+  float resultado = 0.0;
   tiempoRelativoNivelAgua = tiempoActual - tiempoInicialNivelAgua;
   if (tiempoRelativoNivelAgua >= 50)
   {
+    digitalWrite(trigp, LOW);
+    delayMicroseconds(4);
     digitalWrite(trigp, HIGH);
     delayMicroseconds(10);
     digitalWrite(trigp, LOW);
     tiempoInicialNivelAgua = millis();
-    return pulseIn(echop, HIGH) / 58.0;
+    resultado = pulseIn(echop, HIGH) / 58.0;
+    //Serial.println("sultra: " + String(resultado));
+    return resultado;
   }
   return InputiempoRelativoNivelAgua;
 }
@@ -215,8 +229,9 @@ int readnivelCo2(double ADCnivelCo2, float *pcurve) {
 void leerSensores() { //Read sensors information and store it in variables
   InputiempoRelativoNivelCo2 = smoothnivelCo2(nivelCo2SEN, totalnivelCo2, readingsnivelCo2, readIndexnivelCo2);
   //InputiempoRelativoNivelAgua = smooth(sultra(WLECHO, WLTRIG), totalnivelAgua, readingsnivelAgua, readIndexnivelAgua, 'M');
+  //Serial.println("Smooth: " +String(InputiempoRelativoNivelAgua));
   InputiempoRelativoNivelAgua = sultra(WLECHO, WLTRIG);
-  //Inputt = smooth(WLPIN, totall, readingsl, readIndexl);
+  //Maxthermo
   Inputwt = smooth(TEMP_AGUA, totalwt, readingswt, readIndexwt, 'A');
   tiempoRelativo = tiempoActual - tiempoInicial;
   if (tiempoRelativo >= tsamr)
@@ -230,7 +245,8 @@ void leerSensores() { //Read sensors information and store it in variables
       WTOUTSTATE = 0;
     }
     nivelCo2 = constrain(readnivelCo2(InputiempoRelativoNivelCo2, nivelCo2Curve), 400, 10000);
-    nivelAgua = flmap(InputiempoRelativoNivelAgua, nivelAguai_max, nivelAguai_min, nivelAguao_min, nivelAguao_max);
+    nivelAgua = ultrasensor_flmap(InputiempoRelativoNivelAgua, nivelAguai_min, nivelAguai_max, nivelAguao_min, nivelAguao_max);
+    //Serial.println("NIVEL MAP SENSORS: " + String(nivelAgua));
     t = dht.readTemperature();
     wt = flmap(Inputwt, wtadc_min, wtadc_max, wto_min, wto_max);
     h = dht.readHumidity();
@@ -372,7 +388,7 @@ void MeasInitialize() {
     Inputwt = smooth(TEMP_AGUA, totalwt, readingswt, readIndexwt, 'A');
   }
   nivelCo2 = constrain(readnivelCo2(InputiempoRelativoNivelCo2, nivelCo2Curve), 400, 10000);
-  nivelAgua = flmap(InputiempoRelativoNivelAgua, nivelAguai_max, nivelAguai_min, nivelAguao_min, nivelAguao_max);
+  nivelAgua = ultrasensor_flmap(InputiempoRelativoNivelAgua, nivelAguai_max, nivelAguai_min, nivelAguao_min, nivelAguao_max);
   wt = flmap(Inputwt, wtadc_min, wtadc_max, wto_min, wto_max);
   IC = constrain(0.0952 * InputIC - 49.732, 0, 30);
   IP1 = constrain(0.0952 * InputIP1 - 49.732, 0, 30);
